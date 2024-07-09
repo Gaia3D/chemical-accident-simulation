@@ -5,3 +5,11 @@
   width: 100px;
   height: 20px;
 }
+.cesium-credit-textContainer {
+  display: none;
+  opacity: 0;
+}
+.cesium-credit-expand-link {
+  display: none;
+  opacity: 0;
+}
