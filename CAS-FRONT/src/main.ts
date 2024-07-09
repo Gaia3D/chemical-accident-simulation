@@ -1,5 +1,33 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
+import {createApp} from 'vue'
+import LoadScript, {loadScript} from 'vue-plugin-load-script'
+import './base.css'
+import "./externals/cesium/Widgets/widgets.css";
+import "./cesium-custom.css";
 
-createApp(App).mount('#app')
+/* @ts-ignore */
+window.CESIUM_BASE_URL = '/src/externals/cesium/';
+
+import App from './App.vue'
+import router from './router'
+
+await loadScript("/src/externals/cesium/cesium.js").then(e => {
+    /* @ts-ignore */
+    console.log(`Loadded CesiumJS ${Cesium.VERSION}`);
+    console.debug(e);
+}).catch(e => {
+    console.error("Could not load CesiumJS.");
+    console.error(e);
+})
+await loadScript("/src/externals/mago3d/mago3d.js").then(e => {
+    /* @ts-ignore */
+    console.log(`Loadded MagoJS ${Mago3D.VERSION}`);
+    console.debug(e);
+}).catch(e => {
+    console.error("Could not load Mago3D.");
+    console.error(e);
+})
+
+createApp(App)
+    .use(router)
+    .use(LoadScript)
+    .mount('#app')
