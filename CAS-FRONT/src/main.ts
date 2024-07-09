@@ -12,18 +12,18 @@ import router from './router'
 
 await loadScript("/src/externals/cesium/cesium.js").then(e => {
     /* @ts-ignore */
-    console.log(`Loadded CesiumJS ${Cesium.VERSION}`);
+    console.log(`[Main] Loadded CesiumJS ${Cesium.VERSION}`);
     console.debug(e);
 }).catch(e => {
-    console.error("Could not load CesiumJS.");
+    console.error("[Main] Could not load CesiumJS.");
     console.error(e);
 })
 await loadScript("/src/externals/mago3d/mago3d.js").then(e => {
     /* @ts-ignore */
-    console.log(`Loadded MagoJS ${Mago3D.VERSION}`);
+    console.log(`[Main] Loadded MagoJS ${Mago3D.VERSION}`);
     console.debug(e);
 }).catch(e => {
-    console.error("Could not load Mago3D.");
+    console.error("[Main] Could not load Mago3D.");
     console.error(e);
 })
 

@@ -1,13 +1,16 @@
 import "externals/cesium/Widget/Widget.css";
 
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
+  import {onMounted, ref} from "vue";
   const magoInstance = ref<any>();
   const viewer = ref<any>();
 
-  onMounted(() => {
-    console.log('Mounted Map Component');
+  /*defineProps<{
+    msg: string
+  }>()*/
 
+  onMounted(() => {
+    console.log('[MapComponent] Mounted');
     const options : any = {};
     options.infoBox = false;
     options.navigationHelpButton = false;
@@ -23,8 +26,21 @@ import {onMounted, ref} from "vue";
     magoInstance.value = newMagoInstance;
     viewer.value = newMagoInstance.getViewer()
 
-    console.log('mago3dInstance', magoInstance);
-    console.log('viewer', viewer);
+    console.log('[MapComponent] mago3dInstance', magoInstance);
+    console.log('[MapComponent] viewer', viewer);
+  });
+
+  const getViewer = () => {
+    return viewer.value;
+  }
+
+  const getMagoInstance = () => {
+    return magoInstance.value;
+  }
+
+  defineExpose({
+    getViewer,
+    getMagoInstance
   });
 </script>
 
