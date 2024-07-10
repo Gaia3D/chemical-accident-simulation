@@ -1,0 +1,75 @@
+.left {
+  left: 20px;
+  text-align: left;
+}
+.left > * {
+  margin-right: auto;
+}
+
+.right {
+  right: 20px;
+  text-align: right;
+}
+.right > * {
+  margin-left: auto;
+}
+
+.top {
+  top: 20px;
+}
+.bottom {
+  bottom: 20px;
+}
+
+.float-layer {
+  font-size: 0.8em;
+  position: absolute;
+  z-index: 10;
+  opacity: 0.9;
+}
+
+.vertical > * {
+  display: inline-block;
+  margin-right: 8px;
+}
+.vertical > *:last-child {
+  margin-right: 0;
+}
+
+.horizontal > * {
+  display: block;
+  margin-bottom: 8px;
+}
+.horizontal > *:last-child {
+  margin-bottom: 0;
+}
+
+.layer {
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 0 3px 2px #00000012;
+}
+
+button {
+  color: #000000;
+  font-size: 11px;
+  padding: 5px 15px;
+  border-radius: 8px;
+  background-color: #e8e8e8;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+button:hover {
+  background-color: #d8d8d8;
+  border: none;
+}
+button:active, button:focus {
+  border: none;
+  outline:none;
+}
+button.toggle {
+  background-color: #b9b9b9;
+  box-shadow: inset 0 0 3px 2px rgba(0, 0, 0, 0.04);
+}
