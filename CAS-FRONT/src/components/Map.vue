@@ -9,6 +9,9 @@ import "externals/cesium/Widget/Widget.css";
 
   /* @ts-ignore */
   const Cesium = window.Cesium;
+  /* @ts-ignore */
+  const Mago3D = window.Mago3D;
+
   const magoInstance = ref<any>();
   const cesiumViewer = ref<any>();
 
@@ -17,28 +20,13 @@ import "externals/cesium/Widget/Widget.css";
 
   onMounted(() => {
     console.log('[MapComponent] Mounted');
-    /* @ts-ignore */
+    Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
     const newMagoInstance = new Mago3D.Mago3d("mago3dContainer", {}, {loadend: () => {}}, props.initOptions);
     magoInstance.value = newMagoInstance;
     cesiumViewer.value = newMagoInstance.getViewer()
-
-    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5OTEzYmExNS1lNjI1LTQxNWUtOGFkNS0zM2U0Y2FkMjA4OGMiLCJpZCI6MTY3ODk5LCJpYXQiOjE2OTUzNTYxMTl9.7Alxx-4hzrnSBkbz1DvClO8eQX38sBVzTKXYI-lI8_g"
-
     console.log('[MapComponent] mago3dInstance', magoInstance);
     console.log('[MapComponent] viewer', cesiumViewer);
   });
-
-  const changeImageryLayer = (url: string) => {
-    const viewer = cesiumViewer.value
-    const scene = viewer.scene
-    const layers = scene.imageryLayers
-    layers.removeAll()
-
-    /* @ts-ignore */
-    const osm = new Cesium.OpenStreetMapImageryProvider({url: url})
-    layers.addImageryProvider(osm)
-    return osm
-  }
 
   const changeGlobeColor = (cssColor: string = '#000000') => {
     const viewer = cesiumViewer.value
@@ -46,11 +34,22 @@ import "externals/cesium/Widget/Widget.css";
     scene.globe.baseColor = Cesium.Color.fromCssColorString(cssColor)
   }
 
-  const removeAllImageryLayers = () => {
+  const changeImageryLayer = (url: string) => {
     const viewer = cesiumViewer.value
     const scene = viewer.scene
     const layers = scene.imageryLayers
-    layers.removeAll()
+
+    const duplicateLayer = layers._layers.find((layer: any) => {
+      return layer.imageryProvider.url.startsWith(url)
+    })
+
+    if (duplicateLayer === undefined) {
+      const osm = new Cesium.OpenStreetMapImageryProvider({url: url})
+      layers.addImageryProvider(osm)
+    } else {
+      hideOtherImageryLayers(url)
+      duplicateLayer.show = true
+    }
   }
 
   const changeVWorldImageryLayer = (type: string, extension: string) => {
@@ -58,24 +57,61 @@ import "externals/cesium/Widget/Widget.css";
     const scene = viewer.scene
     const layers = scene.imageryLayers
 
-    const VWORD_KEY = props.initOptions.vworldToken
+    const VWORLD_KEY = import.meta.env.VITE_VWORLD_ACCESS_TOKEN;
     const minLevel = 5
     const maxLevel = 19
 
     const protocol = location.protocol === 'https:' ? 'https' : 'http'
     const options = {
-      url: `${protocol}://api.vworld.kr/req/wmts/1.0.0/${VWORD_KEY}/${type}/{TileMatrix}/{TileRow}/{TileCol}.${extension}`,
+      url: `${protocol}://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/${type}/{TileMatrix}/{TileRow}/{TileCol}.${extension}`,
       layer: 'Base',
       style: 'default',
       maximumLevel: maxLevel,
       tileMatrixSetID: 'default028mm'
     }
-    const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
-    const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
-      show: true,
-      minimumTerrainLevel: minLevel
-    });
-    layers.add(imageryLayer)
+
+    const duplicateLayer = layers._layers.find((layer: any) => {
+      return layer.imageryProvider.url.startsWith(options.url)
+    })
+
+    if (duplicateLayer === undefined) {
+      const imageryProvider = new Cesium.WebMapTileServiceImageryProvider(options)
+      const imageryLayer = new Cesium.ImageryLayer(imageryProvider, {
+        show: true,
+        minimumTerrainLevel: minLevel
+      });
+      layers.add(imageryLayer)
+    } else {
+      hideOtherImageryLayers(options.url)
+      duplicateLayer.show = true
+    }
+  }
+
+  const hideOtherImageryLayers = (url: string) => {
+    const viewer = cesiumViewer.value
+    const scene = viewer.scene
+    const layers = scene.imageryLayers
+    layers._layers.forEach((layer: any) => {
+      if (layer.imageryProvider.url !== url) {
+        layer.show = false
+      }
+    })
+  }
+
+  const hideAllImageryLayers = () => {
+    const viewer = cesiumViewer.value
+    const scene = viewer.scene
+    const layers = scene.imageryLayers
+    layers._layers.forEach((layer: any) => {
+      layer.show = false
+    })
+  }
+
+  const removeAllImageryLayers = () => {
+    const viewer = cesiumViewer.value
+    const scene = viewer.scene
+    const layers = scene.imageryLayers
+    layers.removeAll()
   }
 
   const changeWorldTerrain = async () => {
@@ -96,11 +132,25 @@ import "externals/cesium/Widget/Widget.css";
       enableShowOutline: false,
       showOutline: false,
     });
-    osmBuildingsTileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.REPLACE;
+
+    // 0.85 0.82 0.79
+    osmBuildingsTileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
     osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
-      color: "color('#ffffff')",
+      color: "color('#d9d0c9')",
+      backgroundColor: "color('#ffffff')",
     });
     omsBuildingsTileset.value = osmBuildingsTileset;
+
+    omsBuildingsTileset.value.customShader = new Cesium.CustomShader({
+      lightingModel: Cesium.LightingModel.PBR,
+      fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+            material.diffuse = vec3(0.8509, 0.82, 0.79);
+        }
+        `,
+    });
+
     return osmBuildingsTileset;
   }
 
@@ -120,7 +170,9 @@ import "externals/cesium/Widget/Widget.css";
     changeVWorldImageryLayer,
     changeWorldTerrain,
     getOmsBuildingsTileset,
-    removeAllImageryLayers
+    hideAllImageryLayers,
+    hideOtherImageryLayers,
+    removeAllImageryLayers,
   });
 </script>
 

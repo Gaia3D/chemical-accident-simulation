@@ -5,7 +5,7 @@ import "./externals/cesium/Widgets/widgets.css";
 import "./cesium-custom.css";
 
 /* @ts-ignore */
-window.CESIUM_BASE_URL = '/src/externals/cesium/';
+window.CESIUM_BASE_URL = import.meta.env.VITE_CESIUM_BASE_URL
 
 import App from './App.vue'
 import router from './router'

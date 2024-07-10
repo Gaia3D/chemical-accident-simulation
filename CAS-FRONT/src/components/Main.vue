@@ -2,10 +2,20 @@
 import Map from "./Map.vue";
 import {onMounted, ref} from "vue";
 
+/* @ts-ignore */
+const Cesium = window.Cesium;
+/* @ts-ignore */
+const Mago3D = window.Mago3D;
+
 const mapComponent = ref();
 
 const viewer = ref();
 const magoInstance = ref();
+const initPosition = {
+  lon: 126.978388,
+  lat: 37.566610,
+  height: 50000,
+};
 
 const options = ref({
   infoBox: false,
@@ -15,21 +25,7 @@ const options = ref({
   fullscreenButton: false,
   geocoder: false,
   baseLayerPicker: false,
-  vworldToken: 'BB89CEE2-0CBC-3378-A40B-468C4897B788',
 });
-
-/* @ts-ignore */
-const Cesium = window.Cesium;
-/* @ts-ignore */
-const Mago3D = window.Mago3D;
-
-const printViewer = () => {
-  console.log(viewer.value);
-}
-
-const printMagoInstance = () => {
-  console.log(magoInstance.value);
-}
 
 const flyTo = (lon: number, lat: number, height: number, duration: number = 2) => {
   viewer.value.camera.flyTo({
@@ -37,16 +33,25 @@ const flyTo = (lon: number, lat: number, height: number, duration: number = 2) =
     duration: duration
   });
 }
-
 const toggleOsmLayer = () => {
   mapComponent.value.changeGlobeColor('#edebe5')
-  mapComponent.value.removeAllImageryLayers();
   mapComponent.value.changeImageryLayer('https://a.tile.openstreetmap.org');
 }
-const toggleVWorldLayer = () => {
+const toggleCartoMapLightLayer = () => {
+  mapComponent.value.changeGlobeColor('#d2d8dd')
+  mapComponent.value.changeImageryLayer('https://a.basemaps.cartocdn.com/light_all/');
+}
+const toggleCartoMapDarkLayer = () => {
+  mapComponent.value.changeGlobeColor('#090909')
+  mapComponent.value.changeImageryLayer('https://a.basemaps.cartocdn.com/dark_all/');
+}
+const toggleVWorldSatelliteLayer = () => {
   mapComponent.value.changeGlobeColor('#686b61');
-  mapComponent.value.removeAllImageryLayers();
   mapComponent.value.changeVWorldImageryLayer('Satellite', 'jpeg');
+}
+const toggleVWorldBaseLayer = () => {
+  mapComponent.value.changeGlobeColor('#686b61');
+  mapComponent.value.changeVWorldImageryLayer('Base', 'png');
 }
 const toggleWorldTerrain = async () => {
   if (!(viewer.value.terrainProvider instanceof Cesium.CesiumTerrainProvider)) {
@@ -73,55 +78,95 @@ onMounted(async () => {
   viewer.value = mapComponent.value.getViewer();
   magoInstance.value = mapComponent.value.getMagoInstance();
 
-  //mapComponent.value.changeGlobeColor('#686b61');
-  //mapComponent.value.changeImageryLayer('https://a.tile.openstreetmap.org');
-  // mapComponent.value.removeAllImageryLayers();
-  // mapComponent.value.changeVWorldImageryLayer('Satellite', 'jpeg');
-
+  flyTo(initPosition.lon, initPosition.lat, initPosition.height, 0);
 
   toggleOsmLayer();
-  toggleVWorldLayer();
-
-  flyTo(126.978388, 37.566610, 50000, 0);
-
   await toggleOsmBuildings();
   await toggleWorldTerrain();
-
-  /*const osmBuildingsTileset = await mapComponent.value.getOmsBuildingsTileset();
-  viewer.value.scene.primitives.add(osmBuildingsTileset);
-
-  const cesiumWorldTerrain = await mapComponent.value.changeWorldTerrain();
-  viewer.value.terrainProvider = cesiumWorldTerrain;*/
 });
 
 </script>
 
 <template>
-  <div class="button-group">
-    <button @click="printViewer">Print Viewer</button>
-    <button @click="printMagoInstance">Print MagoInstance</button>
-    <button @click="toggleOsmLayer">Toggle OSM Layer</button>
-    <button @click="toggleVWorldLayer">Toggle VWorld Layer</button>
-    <button @click="toggleWorldTerrain">Toggle World Terrain</button>
-    <button @click="toggleOsmBuildings">Toggle OSM Buildings</button>
+  <div class="layer-group left top horizontal">
+    <div id="logo">
+      <h2>Mago</h2>
+    </div>
+    <button @click="flyTo(initPosition.lon, initPosition.lat, initPosition.height)">Initial position</button>
+  </div>
+  <div class="layer-group right top horizontal">
+    <button @click="toggleOsmLayer" title="OpenStreetMap Layer">OSM</button>
+    <button @click="toggleCartoMapLightLayer" title="CartoMap Light Layer">CartoMap Light</button>
+    <button @click="toggleCartoMapDarkLayer" title="CartoMap Dark Layer">CartoMap Dark</button>
+    <button @click="toggleVWorldSatelliteLayer" title="VWorld Satellite Layer">VWorld Satellite</button>
+    <button @click="toggleVWorldBaseLayer" title="VWorld Base Layer">VWorld Base</button>
+  </div>
+  <div class="layer-group right bottom vertical">
+    <button @click="toggleWorldTerrain" title="Cesium World Terrain">World Terrain</button>
+    <button @click="toggleOsmBuildings" title="Cesium OSM Buildings">OSM Buildings</button>
   </div>
   <Map :init-options="options" ref="mapComponent"/>
 </template>
 
 <style scoped>
-.button-group {
+div#logo {
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.1);
+}
+
+button {
+  color: #000000;
+  font-size: 11px;
+  padding: 5px 15px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+.left {
+  left: 10px;
+}
+.left > * {
+  margin-right: auto;
+}
+
+.right {
+  right: 10px;
+}
+.right > * {
+  margin-left: auto;
+}
+
+.top {
+  top: 10px;
+}
+.bottom {
+  bottom: 10px;
+}
+
+.layer-group {
   font-size: 0.8em;
   position: absolute;
-  top: 10px;
-  left: 10px;
   z-index: 10;
   opacity: 0.9;
 }
-.button-group button {
+
+.vertical > * {
+  display: inline-block;
+  margin-right: 5px;
+}
+.vertical > *:last-child {
+  margin-right: 0;
+}
+
+.horizontal > * {
   display: block;
   margin-bottom: 5px;
 }
-.button-group button:last-child {
+.horizontal > *:last-child {
   margin-bottom: 0;
 }
 </style>
