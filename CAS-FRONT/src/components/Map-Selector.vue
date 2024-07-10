@@ -22,7 +22,9 @@ const changeImageryLayer = (url: string) => {
   const layers = scene.imageryLayers
 
   const duplicateLayer = layers._layers.find((layer: any) => {
-    return layer.imageryProvider.url.startsWith(url)
+    if (layer.imageryProvider.url !== undefined) {
+      return layer.imageryProvider.url.startsWith(url)
+    }
   })
 
   if (duplicateLayer === undefined) {
@@ -30,6 +32,26 @@ const changeImageryLayer = (url: string) => {
     layers.addImageryProvider(osm)
   } else {
     hideOtherImageryLayers(url)
+    duplicateLayer.show = true
+  }
+}
+
+const changeBingImageryLayer = async (mapStyle: any) => {
+  const viewer = getViewer()
+  const scene = viewer.scene
+  const layers = scene.imageryLayers
+  const mapStyleText = mapStyle === Cesium.IonWorldImageryStyle.AERIAL ? 'Aerial' : 'RoadOnDemand'
+
+  const duplicateLayer = layers._layers.find((layer: any) => {
+    const imageryProvider = layer.imageryProvider._imageryProvider;
+    return imageryProvider instanceof Cesium.BingMapsImageryProvider && imageryProvider.mapStyle === mapStyleText
+  })
+
+  hideAllImageryLayers();
+  if (duplicateLayer === undefined) {
+    const bing = await Cesium.createWorldImageryAsync({style : mapStyle});
+    layers.addImageryProvider(bing)
+  } else {
     duplicateLayer.show = true
   }
 }
@@ -53,7 +75,9 @@ const changeVWorldImageryLayer = (type: string, extension: string) => {
   }
 
   const duplicateLayer = layers._layers.find((layer: any) => {
-    return layer.imageryProvider.url.startsWith(options.url)
+    if (layer.imageryProvider.url !== undefined) {
+      return layer.imageryProvider.url.startsWith(options.url)
+    }
   })
 
   if (duplicateLayer === undefined) {
@@ -101,6 +125,14 @@ const toggleOsmLayer = () => {
   const protocol = location.protocol === 'https:' ? 'https' : 'http'
   changeImageryLayer(`${protocol}://a.tile.openstreetmap.org`);
 }
+const toggleBingLayer = async () => {
+  changeGlobeColor('#f0ffff')
+  await changeBingImageryLayer(Cesium.IonWorldImageryStyle.ROAD);
+}
+const toggleBingSatelliteLayer = async () => {
+  changeGlobeColor('#9f9785')
+  await changeBingImageryLayer(Cesium.IonWorldImageryStyle.AERIAL);
+}
 const toggleCartoMapLightLayer = () => {
   changeGlobeColor('#d2d8dd')
   const protocol = location.protocol === 'https:' ? 'https' : 'http'
@@ -126,6 +158,8 @@ const getViewer = () => {
 
 defineExpose({
   toggleOsmLayer,
+  toggleBingLayer,
+  toggleBingSatelliteLayer,
   toggleCartoMapLightLayer,
   toggleCartoMapDarkLayer,
   toggleVWorldSatelliteLayer,
@@ -147,11 +181,17 @@ defineExpose({
     <button @click="toggleCartoMapDarkLayer" title="CartoMap Dark Layer">
       <img src="../assets/images/maps/carto-dark.png" alt="CartoMap Dark Layer">
     </button>
+    <button @click="toggleVWorldBaseLayer" title="VWorld Base Layer">
+      <img src="../assets/images/maps/vworld-base.png" alt="VWorld Base Layer">
+    </button>
     <button @click="toggleVWorldSatelliteLayer" title="VWorld Satellite Layer">
       <img src="../assets/images/maps/vworld-satellite.png" alt="VWorld Satellite Layer">
     </button>
-    <button @click="toggleVWorldBaseLayer" title="VWorld Base Layer">
-      <img src="../assets/images/maps/vworld-base.png" alt="VWorld Base Layer">
+    <button @click="toggleBingLayer" title="Bing Maps Layer">
+      <img src="../assets/images/maps/bing.png" alt="Bing Maps Layer">
+    </button>
+    <button @click="toggleBingSatelliteLayer" title="Bing Satellite Layer">
+      <img src="../assets/images/maps/bing-satellite.png" alt="Bing Satellite Layer">
     </button>
   </div>
 </template>

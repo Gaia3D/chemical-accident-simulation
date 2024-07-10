@@ -41,7 +41,7 @@ const resetDirection = () => {
   })
 }
 
-const flyTo = (lon: number, lat: number, height: number, duration: number = 2) => {
+const flyTo = (lon: number, lat: number, height: number, duration: number = 1) => {
   const viewer = getViewer()
   viewer.camera.flyTo({
     destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
