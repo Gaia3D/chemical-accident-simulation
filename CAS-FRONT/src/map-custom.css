@@ -1,3 +1,8 @@
+.center {
+  transform: translate(-50%, 0);
+  left: 50%;
+}
+
 .left {
   left: 20px;
   text-align: left;

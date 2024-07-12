@@ -46,3 +46,10 @@ a {
     text-decoration: none;
     color: inherit;
 }
+
+body {
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none
+}
