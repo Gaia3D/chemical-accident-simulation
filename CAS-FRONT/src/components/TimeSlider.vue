@@ -64,18 +64,52 @@ const resetTime = () => {
 
 let intervalEvent: any = undefined;
 
+/*const setCesiumClock = (startMilisec, currentMilisec) => {
+
+}*/
+
 const setTime = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   const startMilisec = magoManager.animationTimeController._animationStartUnixTimeMilisec;
   const currentTime = parseInt(timeTable.value.nowUnixTimeMilisec);
   magoManager.animationTimeController._currentUnixTimeMilisec = startMilisec + currentTime;
+
+
+  let startDateTime = new Date(startMilisec);
+  let currentDateTime = new Date( magoManager.animationTimeController._currentUnixTimeMilisec);
+  let endDateTime = new Date(startMilisec + 86400000);
+
+  const timeInfo = toTimeFormat(currentDateTime);
+  const endTimeInfo = toTimeFormat(endDateTime);
+
+
+  let startJulianDate = Cesium.JulianDate.fromIso8601(startDateTime.toISOString())
+  let currentJulianDate = Cesium.JulianDate.fromIso8601(currentDateTime.toISOString())
+  let endJulianDate = Cesium.JulianDate.fromIso8601(endDateTime.toISOString())
+
+  /* setCesiumDate */
+  const viewer = getViewer();
+  const clock = viewer.clock
+  clock.startTime = startJulianDate
+  clock.stopTime = endJulianDate
+  clock.currentTime = currentJulianDate
+  clock.multiplier = 1
+
+  const timeInfoElement = document.getElementById('time-info');
+  if (timeInfoElement) {
+    timeInfoElement.innerText = `${timeInfo} / ${endTimeInfo}`;
+  }
+
 }
 
 const playTime = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   magoManager.animationTimeController.startAnimation();
+
+
+  const viewer = getViewer();
 
   if (intervalEvent === undefined) {
     intervalEvent = setInterval(() => {
@@ -92,11 +126,31 @@ const playTime = () => {
       const endDateTime = new Date(startUnixTimeMilisec + 86400000);
       const endTimeInfo = toTimeFormat(endDateTime);
 
+      let startDateTime = new Date(startUnixTimeMilisec);
+
+
+      let startJulianDate = Cesium.JulianDate.fromIso8601(startDateTime.toISOString())
+      let endJulianDate = Cesium.JulianDate.fromIso8601(endDateTime.toISOString())
+      let currentTime = Cesium.JulianDate.fromIso8601(date.toISOString())
+
+
+      //let startDateTime = new Date(startUnixTimeMilisec);
+      //let endDateTime = new Date(startUnixTimeMilisec + 86400000);
+
+      /* setCesiumDate */
+      let clock = viewer.clock
+      clock.startTime = startJulianDate
+      clock.stopTime = endJulianDate
+      clock.currentTime = currentTime
+      clock.multiplier = 1
+
+
+
       const timeInfoElement = document.getElementById('time-info');
       if (timeInfoElement) {
         timeInfoElement.innerText = `${timeInfo} / ${endTimeInfo}`;
       }
-    }, 100);
+    }, 10);
   }
 }
 

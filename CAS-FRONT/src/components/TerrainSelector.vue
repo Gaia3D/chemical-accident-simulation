@@ -11,7 +11,9 @@ const omsBuildingsTileset = ref<any>();
 const cesiumWorldTerrain = ref<any>();
 const toggleState = ref<any>({
   worldTerrain: false,
-  osmBuildings: false
+  osmBuildings: false,
+  dangjinTerrain: false,
+  dangjinBuildings: false,
 });
 
 const props = defineProps<{
@@ -22,7 +24,9 @@ const changeWorldTerrain = async () => {
   if (cesiumWorldTerrain.value) {
     return cesiumWorldTerrain.value;
   }
-  const worldTerrain = await Cesium.createWorldTerrainAsync();
+  const worldTerrain = await Cesium.createWorldTerrainAsync({
+    requestVertexNormals: true
+  });
   cesiumWorldTerrain.value = worldTerrain;
   return worldTerrain;
 }
@@ -68,6 +72,20 @@ const toggleWorldTerrain = async () => {
     toggleState.value.worldTerrain = false;
   }
 }
+const toggleDangjinTerrain = async () => {
+  const viewer = getViewer()
+  if (!(viewer.terrainProvider instanceof Cesium.CesiumTerrainProvider)) {
+    const url = "/data/terrains/dang-jin-terrain-14";
+    viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(url, {
+      requestVertexNormals: true,
+    });
+    toggleState.value.dangjinTerrain = true;
+  } else {
+    viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+    toggleState.value.dangjinTerrain = false;
+  }
+}
+
 const toggleOsmBuildings = async () => {
   const viewer = getViewer()
   const osmBuildingsTileset = await getOmsBuildingsTileset();
@@ -83,6 +101,24 @@ const toggleOsmBuildings = async () => {
     toggleState.value.osmBuildings = true;
   }
 }
+const toggleDangjinBuildings = async () => {
+  const viewer = getViewer()
+  const url = "/data/tilesets/dang-jin-building-terrain/tileset.json";
+  const buildingsTileset = await Cesium.Cesium3DTileset.fromUrl(url, {
+
+  });
+
+  const duplicatedTileset = viewer.scene.primitives._primitives.find((e : any) => {
+    return e._url === buildingsTileset._url
+  })
+  if (duplicatedTileset !== undefined) {
+    duplicatedTileset.show = !duplicatedTileset.show;
+    toggleState.value.dangjinBuildings = duplicatedTileset.show;
+  } else {
+    viewer.scene.primitives.add(buildingsTileset);
+    toggleState.value.dangjinBuildings = true;
+  }
+}
 
 const getViewer = () => {
   return props.transferViewer.viewer;
@@ -90,7 +126,9 @@ const getViewer = () => {
 
 defineExpose({
   toggleOsmBuildings,
+  toggleDangjinBuildings,
   toggleWorldTerrain,
+  toggleDangjinTerrain,
   changeWorldTerrain,
   getOmsBuildingsTileset
 })
@@ -102,6 +140,8 @@ defineExpose({
     <div class="terrain-selector layer vertical">
       <button @click="toggleWorldTerrain" title="Cesium World Terrain" v-bind:class="toggleState.worldTerrain ? 'toggle' : ''">World Terrain</button>
       <button @click="toggleOsmBuildings" title="Cesium OSM Buildings" v-bind:class="toggleState.osmBuildings ? 'toggle' : ''">OSM Buildings</button>
+      <button @click="toggleDangjinTerrain" title="Dangjin Terrain" v-bind:class="toggleState.dangjinTerrain ? 'toggle' : ''">Dangjin Terrain</button>
+      <button @click="toggleDangjinBuildings" title="Dangjin Buildings" v-bind:class="toggleState.dangjinBuildings ? 'toggle' : ''">Dangjin Buildings</button>
     </div>
   </div>
 </template>
