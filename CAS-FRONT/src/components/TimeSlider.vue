@@ -32,8 +32,8 @@ const timeTable = ref<any>({
   nowUnixTimeMilisec : 10000000,
   minUnixTimeMilisec : 0,
   maxUnixTimeMilisec : 86400000,
-
   startUnixTimeMilisec : 0,
+  isPlaying : false
 });
 
 const setTimeScale = (timeScale: number) => {
@@ -60,6 +60,7 @@ const resetTime = () => {
   }
   magoManager.animationTimeController.reset(timeOptions);
   magoManager.animationTimeController.pauseAnimation();
+  timeTable.value.isPlaying = false;
 }
 
 let intervalEvent: any = undefined;
@@ -107,7 +108,7 @@ const playTime = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   magoManager.animationTimeController.startAnimation();
-
+  timeTable.value.isPlaying = true;
 
   const viewer = getViewer();
 
@@ -166,6 +167,8 @@ const pauseTime = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   magoManager.animationTimeController.pauseAnimation();
+  timeTable.value.isPlaying = false;
+
 
   if (intervalEvent !== undefined) {
     clearInterval(intervalEvent);
@@ -238,10 +241,26 @@ const getViewer = () => {
         <option value="60" label="60h"></option>-->
       </datalist>
       <div id="time-controller" class="vertical center">
-        <button @click="playTime">Play</button>
-        <button @click="pauseTime">Pause</button>
-<!--        <button>Stop</button>-->
-        <button @click="resetTime">Reset</button>
+        <button @click="playTime">
+          <img src="/src/assets/images/icons/back.png" alt="play button"/>
+        </button>
+        <button @click="playTime" v-show="!timeTable.isPlaying">
+          <img src="/src/assets/images/icons/play.png" alt="play button"/>
+        </button>
+        <button @click="pauseTime" v-show="timeTable.isPlaying">
+          <img src="/src/assets/images/icons/pause.png" alt="pause button"/>
+        </button>
+        <button @click="resetTime">
+          <img src="/src/assets/images/icons/stop.png" alt="reset button"/>
+        </button>
+        <button @click="playTime">
+          <img src="/src/assets/images/icons/forward.png" alt="play button"/>
+        </button>
+        <!--        <button @click="playTime" v-show="timeTable.isPlaying">Play</button>
+                <button @click="pauseTime" v-show="!timeTable.isPlaying">Pause</button>
+        &lt;!&ndash;        <button>Stop</button>&ndash;&gt;
+                <button @click="resetTime">Reset</button>-->
+
       </div>
       <div id="time-info">
         2021-09-01 12:00 / 2021-09-02 12:00
@@ -337,6 +356,17 @@ datalist#tick-marks > option:last-child {
   position: relative;
   text-align: center;
 }
+#time-controller button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+#time-controller button > img {
+  width: 100%;
+  height: 100%;
+  filter: brightness(0) saturate(100%) invert(43%) sepia(0%) saturate(80%) hue-rotate(162deg) brightness(86%) contrast(91%);
+}
+
 #time-info {
   position: absolute;
   left: 15px;
@@ -346,5 +376,6 @@ datalist#tick-marks > option:last-child {
   padding: 8px 20px;
   font-size: 11px;
   color: #777777;
+  font-family: monospace;
 }
 </style>

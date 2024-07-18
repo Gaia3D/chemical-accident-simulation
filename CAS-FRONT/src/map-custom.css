@@ -121,11 +121,11 @@ div.switch-wrapper > label > span {
 }
 /* label color */
 div.switch-wrapper > label:has(input:checked) {
-  background: #007ce1;
-  border: 2px solid #007ce1;
+  background: #1b95ff;
+  border: 2px solid #1b95ff;
 }
 div.switch-wrapper > label:hover:has(input:checked) {
-  background: #007ce1;
+  background: #1b95ff;
 }
 /* move */
 div.switch-wrapper input:checked+span {
@@ -136,9 +136,9 @@ div.switch-wrapper input:checked+span {
 
 
 div.switch-wrapper > label:has(input[type='checkbox']:checked) {
-  background: #19b900;
-  border: 2px solid #19b900;
+  background: #1b95ff;
+  border: 2px solid #1b95ff;
 }
 div.switch-wrapper > label:hover:has(input[type='checkbox']:checked) {
-  background: #19b900;
+  background: #1b95ff;
 }

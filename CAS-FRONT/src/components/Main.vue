@@ -6,6 +6,7 @@ import MapSelector from "./MapSelector.vue";
 import MapController from "./MapController.vue";
 import TerrainSelector from "./TerrainSelector.vue";
 import TimeSlider from "./TimeSlider.vue";
+import SimulationController from "./SimulationController.vue";
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -174,8 +175,6 @@ onMounted(async () => {
   transferViewer.value.magoInstance = magoInstance.value;
 
   viewer.value.scene.globe.depthTestAgainstTerrain = true;
-  viewer.value.scene.globe.enableLighting = true;
-
 
   const dateObject = new Date()
   const options = {
@@ -192,74 +191,6 @@ onMounted(async () => {
   let tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  /*let start = Cesium.JulianDate.fromIso8601(today.toISOString())
-  let stop = Cesium.JulianDate.fromIso8601(tomorrow.toISOString())
-  let clock = viewer.value.clock
-  clock.startTime = start
-  clock.stopTime = stop
-  clock.currentTime = start
-  clock.clockRange = Cesium.ClockRange.UNBOUNDED
-  clock.multiplier = options.speed
-*/
-  const range = 1000
-  const innerFactor = 0.3;
-  const outterFactor = 0.5;
-  viewer.value.entities.add({
-    name: "Dome",
-    position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
-    ellipsoid: {
-      radii: new Cesium.Cartesian3(range, range, range),
-      maximumCone: Cesium.Math.PI_OVER_TWO,
-      material: Cesium.Color.RED.withAlpha(innerFactor),
-      outline: true,
-      outlineColor: Cesium.Color.RED.withAlpha(outterFactor),
-    },
-  });
-
-  viewer.value.entities.add({
-    name: "Dome",
-    position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
-    ellipsoid: {
-      radii: new Cesium.Cartesian3(range * 2, range * 2, range * 2),
-      maximumCone: Cesium.Math.PI_OVER_TWO,
-      material: Cesium.Color.DARKORANGE.withAlpha(innerFactor),
-      outline: true,
-      outlineColor: Cesium.Color.DARKORANGE.withAlpha(outterFactor),
-    },
-  });
-
-  viewer.value.entities.add({
-    name: "Dome",
-    position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
-    ellipsoid: {
-      radii: new Cesium.Cartesian3(range * 3, range * 3, range * 3),
-      maximumCone: Cesium.Math.PI_OVER_TWO,
-      material: Cesium.Color.GREEN.withAlpha(innerFactor),
-      outline: true,
-      outlineColor: Cesium.Color.GREEN.withAlpha(outterFactor),
-    },
-  });
-
-  /*const scene = viewer.scene
-  const layers = scene.imageryLayers
-  const cesiumLogo = Cesium.ImageryLayer.fromProviderAsync(
-      Cesium.SingleTileImageryProvider.fromUrl(
-          "/src/assets/images/mago.png",
-          {
-            rectangle: Cesium.Rectangle.fromDegrees(
-                -75.0,
-                28.0,
-                -67.0,
-                29.75
-            ),
-          }
-      )
-  );
-  layers.add(cesiumLogo);*/
-
-  viewer.value.scene.shadowMap.enabled = true
-  viewer.value.scene.shadowMap.darkness = 0.5
-
   const initPosition = transferViewer.value.initPosition;
   mapController.value.flyTo(initPosition.lon, initPosition.lat, initPosition.height, 0);
   mapSelector.value.toggleOsmLayer();
@@ -269,91 +200,12 @@ onMounted(async () => {
 
 <template>
   <div class="float-layer left top horizontal">
-    <!--    <div id="logo" class="layer">
-      <img src="../assets/images/mago.png" alt="Mago" title="mago"/>
-    </div>-->
     <div id="info" class="layer">
       <h2>충청남도 당진시 시곡동 77-5 | 페놀(3,600) 누출</h2>
       <h4>분석데이터 : 2023/10/22 11:00 기준 (1일 0시간 예측)</h4>
     </div>
     <div class="left vertical">
-      <div id="simulation-layer" class="layer left top horizontal">
-        <h3>사고물질 레이어</h3>
-
-        <div class="switch-wrapper">
-          <h4>사고물질 농도</h4>
-          <label>
-            <input type="radio" name="accident-group" checked>
-            <span></span>
-          </label>
-        </div>
-        <div class="switch-wrapper">
-          <h4>사고물질 노출량</h4>
-          <label>
-            <input type="radio" name="accident-group">
-            <span></span>
-          </label>
-        </div>
-        <div class="switch-wrapper">
-          <h4>사고물질 급성위해도</h4>
-          <label>
-            <input type="radio" name="accident-group">
-            <span></span>
-          </label>
-        </div>
-<!--        <div class="switch-wraper">
-          <label for="switch" class="switch_label">
-            <input type="radio" class="switch" name="group">
-            <span class="onf_btn"></span>
-          </label>
-        </div>-->
-<!--        <button @click="startSimulation">사고물질 농도</button>
-        <button @click="startSimulation">사고물질 노출량</button>
-        <button @click="startSimulation">사고물질 급성위해도</button>-->
-        <h3>예상피해자 레이어</h3>
-        <div class="switch-wrapper">
-          <h4>예상 피해자 분포</h4>
-          <label>
-            <input type="radio" name="victim-group" checked>
-            <span></span>
-          </label>
-        </div>
-        <div class="switch-wrapper">
-          <h4>예상 피해자 이동동선</h4>
-          <label>
-            <input type="radio" name="victim-group">
-            <span></span>
-          </label>
-        </div>
-
-        <h3>기타 레이어</h3>
-        <div class="switch-wrapper">
-          <h4>건물 레이어</h4>
-          <label>
-            <input type="checkbox" name="victim-group" checked>
-            <span></span>
-          </label>
-        </div>
-        <div class="switch-wrapper">
-          <h4>지형 레이어</h4>
-          <label>
-            <input type="checkbox" name="victim-group">
-            <span></span>
-          </label>
-        </div>
-        <div class="switch-wrapper">
-          <h4>반경 레이어(동심원)</h4>
-          <label>
-            <input type="checkbox" name="victim-group">
-            <span></span>
-          </label>
-        </div>
-<!--        <button @click="startSimulation">예상 피해자 분포</button>
-        <button @click="startSimulation">예상 피해자 이동동선</button>-->
-      </div>
-      <div id="legend-layer" class="layer left top horizontal">
-        <h3>범례</h3>
-      </div>
+      <SimulationController :transfer-viewer="transferViewer" ref="simulationController"/>
     </div>
   </div>
   <div class="float-layer right top horizontal">
@@ -375,20 +227,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.switch-wrapper {
-  display: inline-block;
-  width: 185px;
-}
-.switch-wrapper > h4 {
-  min-width: 135px;
-  display: inline-block;
-  text-align: left;
-  vertical-align: middle;
-  font-size: 0.9em;
-  font-weight: normal;
-  margin: 0 5px;
-}
-
 div#info {
 
 }
@@ -412,26 +250,5 @@ div#logo img {
   width: 75px;
   height: 22px;
   margin: 5px 5px 0 5px;
-}
-
-div#simulation-layer {
-  width: 200px;
-  display: inline-block;
-  padding-bottom: 12px;
-}
-div#simulation-layer h3 {
-  font-size: 1.0em;
-  margin: 8px 5px;
-  padding: 0;
-}
-
-div#legend-layer {
-  width: 130px;
-  display: inline-block;
-}
-div#legend-layer h3 {
-  font-size: 1.0em;
-  margin: 5px;
-  padding: 0;
 }
 </style>
