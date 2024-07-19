@@ -37,15 +37,29 @@ const timeTable = ref<any>({
 });
 
 const setTimeScale = (timeScale: number) => {
+  const animationTimeController = getAnimationTimeController();
+  animationTimeController._timeScale = timeScale;
+}
+
+const getAnimationTimeController = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  //magoManager.animationTimeController.setTimeScale(timeScale);
-  magoManager.animationTimeController._timeScale = timeScale;
+  if (magoManager.animationTimeController === undefined) {
+    let timeOptions = {
+      timeScale : 1000,
+      year : 2024,
+      month : 2,
+      day : 6,
+      hour : 11,
+      minute : 0,
+      second : 0
+    };
+    magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
+  }
+  return magoManager.animationTimeController;
 }
 
 const resetTime = () => {
-  const magoInstance = props.transferViewer.magoInstance;
-  const magoManager = magoInstance.getMagoManager();
   let timeOptions = {
     timeScale : 1000,
     year : 2024,
@@ -55,19 +69,14 @@ const resetTime = () => {
     minute : 0,
     second : 0
   };
-  if (magoManager.animationTimeController === undefined) {
-    magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
-  }
-  magoManager.animationTimeController.reset(timeOptions);
-  magoManager.animationTimeController.pauseAnimation();
+
+  const animationTimeController = getAnimationTimeController();
+  animationTimeController.reset(timeOptions);
+  animationTimeController.pauseAnimation();
   timeTable.value.isPlaying = false;
 }
 
 let intervalEvent: any = undefined;
-
-/*const setCesiumClock = (startMilisec, currentMilisec) => {
-
-}*/
 
 const setTime = () => {
   const magoInstance = props.transferViewer.magoInstance;
@@ -105,23 +114,23 @@ const setTime = () => {
 }
 
 const playTime = () => {
-  const magoInstance = props.transferViewer.magoInstance;
-  const magoManager = magoInstance.getMagoManager();
-  magoManager.animationTimeController.startAnimation();
+  const animationTimeController = getAnimationTimeController();
+
+  animationTimeController.startAnimation();
   timeTable.value.isPlaying = true;
 
   const viewer = getViewer();
 
   if (intervalEvent === undefined) {
     intervalEvent = setInterval(() => {
-      timeTable.value.startUnixTimeMilisec = magoManager.animationTimeController._animationStartUnixTimeMilisec;
+      timeTable.value.startUnixTimeMilisec = animationTimeController._animationStartUnixTimeMilisec;
 
-      const startUnixTimeMilisec = magoManager.animationTimeController._animationStartUnixTimeMilisec;
-      const currentUnixTimeMilisec = magoManager.animationTimeController._currentUnixTimeMilisec;
+      const startUnixTimeMilisec = animationTimeController._animationStartUnixTimeMilisec;
+      const currentUnixTimeMilisec = animationTimeController._currentUnixTimeMilisec;
       const offset = currentUnixTimeMilisec - startUnixTimeMilisec;
       timeTable.value.nowUnixTimeMilisec = offset;
 
-      const date = new Date(magoManager.animationTimeController._currentUnixTimeMilisec);
+      const date = new Date(animationTimeController._currentUnixTimeMilisec);
       const timeInfo = toTimeFormat(date);
 
       const endDateTime = new Date(startUnixTimeMilisec + 86400000);
@@ -134,18 +143,12 @@ const playTime = () => {
       let endJulianDate = Cesium.JulianDate.fromIso8601(endDateTime.toISOString())
       let currentTime = Cesium.JulianDate.fromIso8601(date.toISOString())
 
-
-      //let startDateTime = new Date(startUnixTimeMilisec);
-      //let endDateTime = new Date(startUnixTimeMilisec + 86400000);
-
       /* setCesiumDate */
       let clock = viewer.clock
       clock.startTime = startJulianDate
       clock.stopTime = endJulianDate
       clock.currentTime = currentTime
       clock.multiplier = 1
-
-
 
       const timeInfoElement = document.getElementById('time-info');
       if (timeInfoElement) {
@@ -166,7 +169,8 @@ const paddingZero = (num: number) => {
 const pauseTime = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  magoManager.animationTimeController.pauseAnimation();
+  const animationTimeController = getAnimationTimeController();
+  animationTimeController.pauseAnimation();
   timeTable.value.isPlaying = false;
 
 

@@ -4,7 +4,6 @@ import {onMounted, ref} from "vue";
 import "../map-custom.css";
 import MapSelector from "./MapSelector.vue";
 import MapController from "./MapController.vue";
-import TerrainSelector from "./TerrainSelector.vue";
 import TimeSlider from "./TimeSlider.vue";
 import SimulationController from "./SimulationController.vue";
 
@@ -26,7 +25,6 @@ const transferViewer = ref({
 });
 const mapComponent = ref();
 const mapSelector = ref();
-const terrainSelector = ref();
 const mapController = ref();
 
 const viewer = ref();
@@ -41,116 +39,6 @@ const options = ref({
   geocoder: false,
   baseLayerPicker: false,
 });
-
-const paddingZero = (num: number) => {
-  let padding = "000";
-  return (padding + num).slice(-padding.length);
-}
-
-const startItinerary = () => {
-  const legendSample = [
-    ["1.0", "0.0", "0.0", "1.0", "red"], // red
-    ["1.0", "0.5", "0.0", "1.0", "orange"], // orange
-    ["1.0", "1.0", "0.0", "1.0", "yellow"], // yellow
-    ["0.5", "1.0", "0.0", "1.0", "lime"], // lime
-    ["0.0", "1.0", "0.0", "1.0", "green"], // green
-    ["0.0", "0.5", "0.5", "1.0", "cyan"], // cyan
-    ["0.0", "0.0", "1.0", "1.0", "blue"], // blue
-    ["0.5", "0.0", "1.0", "1.0", "purple"], // purple
-    ["1.0", "0.0", "1.0", "1.0", "magenta"], // magenta
-    ["1.0", "0.0", "0.5", "1.0", "pink"], // pink
-  ];
-
-  const magoManager = magoInstance.value.getMagoManager();
-
-  const itineraryPath = "/data/itinerary/";
-  const walkingManMosaicTexPath = itineraryPath + "navigation.png";
-  const options = {
-    magoManager: magoManager,
-    walkingManMosaicTexPath: walkingManMosaicTexPath,
-    walkingManMosaicColumnsCount: 1,
-    walkingManMosaicRowsCount: 1,
-    renderThickLine : false,
-    samplePointsSize : 0.0
-  };
-
-  magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
-  const itineraryManager = magoManager.itineraryManager;
-
-  let timeOptions = {
-    timeScale : 100,
-    year : 2024,
-    month : 2,
-    day : 6,
-    hour : 11,
-    minute : 0,
-    second : 0
-  };
-  if (magoManager.animationTimeController === undefined) {
-    magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
-  }
-
-  let thickness = 2.0;
-  //let itineraryPaths = [];
-
-  for (let loop = 0; loop < 10; loop++) {
-    let padded = paddingZero(loop+1);
-
-    let filePath = itineraryPath + "USER" + padded + ".json";
-    console.log(filePath);
-    //itineraryPaths.push(filePath);
-
-
-
-    let imagePath = "/data/navigations/navigation.png";
-    let layerOptions = {
-      filePath: filePath,
-      lineThickness: thickness,
-      thickLineColor: {
-        r: 0.5, g: 0.5, b: 0.5, a: 0.5
-      },
-      animatedIconFilePath : imagePath,
-    };
-    itineraryManager.newItineraryLayer(layerOptions);
-  }
-}
-
-const startSimulation = () => {
-  const magoManager = magoInstance.value.getMagoManager();
-  magoManager.interactionCollection.array[0].setActive(true);
-  magoManager.interactionCollection.array[0].setTargetType(Mago3D.DataType.NATIVE);
-  magoManager.interactionCollection.array[1].setActive(true);
-  magoManager.interactionCollection.array[1].setTargetType(Mago3D.DataType.NATIVE);
-
-  const path = "/data/chemicalAccident/output_chemicalAccident";
-  const jsonPath = path + "/JsonIndex.json";
-
-  if (!magoManager.chemicalAccidentManager) {
-    let options = {
-      magoManager : magoManager,
-      geoJsonIndexFileFolderPath : path
-    };
-    magoManager.chemicalAccidentManager = new Mago3D.ChemicalAccidentManager(options);
-    magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
-    magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
-
-    let timeOptions = {
-      timeScale : 100,
-      year : 2024,
-      month : 2,
-      day : 6,
-      hour : 11,
-      minute : 0,
-      second : 0
-    };
-    if (magoManager.animationTimeController === undefined) {
-      magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
-    }
-    magoManager.animationTimeController.reset(timeOptions);
-    magoManager.animationTimeController.pauseAnimation();
-    console.log('[MainComponent] Start Simulation');
-  }
-}
 
 const paddedDate = (date: Date) => {
   let dd = String(date.getDate()).padStart(2, '0')
@@ -209,14 +97,7 @@ onMounted(async () => {
     </div>
   </div>
   <div class="float-layer right top horizontal">
-
     <MapSelector :transferViewer="transferViewer" ref="mapSelector"/>
-    <TerrainSelector :transfer-viewer="transferViewer" ref="terrainSelector"/>
-    <div class="vertical right">
-      <button @click="startSimulation">3차원 화학사고 데이터 로드</button>
-      <button @click="startItinerary">이동동선 데이터 로드</button>
-      <button>Function 3</button>
-    </div>
     <MapController :transferViewer="transferViewer" ref="mapController"/>
   </div>
   <div class="float-layer right bottom vertical">

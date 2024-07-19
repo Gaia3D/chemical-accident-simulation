@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import "../map-custom.css";
+import {toggleDangjinTerrain} from "../features/terrainController.ts";
+import {toggleDangjinBuildings} from "../features/buildingTilesetController.ts";
+import {toggleRadius} from "../features/radiusController.ts";
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -14,7 +17,6 @@ const props = defineProps<{
 
 onMounted(async () => {
   console.log('[SimulationController] Mounted Slider Component');
-
 });
 
 const toggleShadow = () => {
@@ -29,46 +31,109 @@ const toggleShadow = () => {
   }
 }
 
-const initDome = () => {
-  const viewer = getViewer();
-  const range = 1000
-  const innerFactor = 0.3;
-  const outterFactor = 0.5;
-  viewer.entities.add({
-    name: "Dome",
-    position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
-    ellipsoid: {
-      radii: new Cesium.Cartesian3(range, range, range),
-      maximumCone: Cesium.Math.PI_OVER_TWO,
-      material: Cesium.Color.RED.withAlpha(innerFactor),
-      outline: true,
-      outlineColor: Cesium.Color.RED.withAlpha(outterFactor),
-    },
-  });
+const paddingZero = (num: number) => {
+  let padding = "000";
+  return (padding + num).slice(-padding.length);
+}
 
-  viewer.entities.add({
-    name: "Dome",
-    position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
-    ellipsoid: {
-      radii: new Cesium.Cartesian3(range * 2, range * 2, range * 2),
-      maximumCone: Cesium.Math.PI_OVER_TWO,
-      material: Cesium.Color.DARKORANGE.withAlpha(innerFactor),
-      outline: true,
-      outlineColor: Cesium.Color.DARKORANGE.withAlpha(outterFactor),
-    },
-  });
+const startItinerary = () => {
+  const legendSample = [
+    ["1.0", "0.0", "0.0", "1.0", "red"], // red
+    ["1.0", "0.5", "0.0", "1.0", "orange"], // orange
+    ["1.0", "1.0", "0.0", "1.0", "yellow"], // yellow
+    ["0.5", "1.0", "0.0", "1.0", "lime"], // lime
+    ["0.0", "1.0", "0.0", "1.0", "green"], // green
+    ["0.0", "0.5", "0.5", "1.0", "cyan"], // cyan
+    ["0.0", "0.0", "1.0", "1.0", "blue"], // blue
+    ["0.5", "0.0", "1.0", "1.0", "purple"], // purple
+    ["1.0", "0.0", "1.0", "1.0", "magenta"], // magenta
+    ["1.0", "0.0", "0.5", "1.0", "pink"], // pink
+  ];
 
-  viewer.entities.add({
-    name: "Dome",
-    position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
-    ellipsoid: {
-      radii: new Cesium.Cartesian3(range * 3, range * 3, range * 3),
-      maximumCone: Cesium.Math.PI_OVER_TWO,
-      material: Cesium.Color.GREEN.withAlpha(innerFactor),
-      outline: true,
-      outlineColor: Cesium.Color.GREEN.withAlpha(outterFactor),
-    },
-  });
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+
+  const itineraryPath = "/data/itinerary/";
+  const walkingManMosaicTexPath = itineraryPath + "navigation.png";
+  const options = {
+    magoManager: magoManager,
+    walkingManMosaicTexPath: walkingManMosaicTexPath,
+    walkingManMosaicColumnsCount: 1,
+    walkingManMosaicRowsCount: 1,
+    renderThickLine : false,
+    samplePointsSize : 0.0
+  };
+
+  magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
+  const itineraryManager = magoManager.itineraryManager;
+
+  let timeOptions = {
+    timeScale : 100,
+    year : 2024,
+    month : 2,
+    day : 6,
+    hour : 11,
+    minute : 0,
+    second : 0
+  };
+  if (magoManager.animationTimeController === undefined) {
+    magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
+  }
+
+  let thickness = 2.0;
+
+  for (let loop = 0; loop < 1; loop++) {
+    let padded = paddingZero(loop+1);
+    let filePath = itineraryPath + "USER" + padded + ".json";
+    let imagePath = "/data/navigations/navigation.png";
+    let layerOptions = {
+      filePath: filePath,
+      lineThickness: thickness,
+      thickLineColor: {
+        r: 0.5, g: 0.5, b: 0.5, a: 0.5
+      },
+      animatedIconFilePath : imagePath,
+    };
+    itineraryManager.newItineraryLayer(layerOptions);
+  }
+}
+
+const startSimulation = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  magoManager.interactionCollection.array[0].setActive(true);
+  magoManager.interactionCollection.array[0].setTargetType(Mago3D.DataType.NATIVE);
+  magoManager.interactionCollection.array[1].setActive(true);
+  magoManager.interactionCollection.array[1].setTargetType(Mago3D.DataType.NATIVE);
+
+  const path = "/data/chemicalAccident/output_chemicalAccident";
+  const jsonPath = path + "/JsonIndex.json";
+
+  if (!magoManager.chemicalAccidentManager) {
+    let options = {
+      magoManager : magoManager,
+      geoJsonIndexFileFolderPath : path
+    };
+    magoManager.chemicalAccidentManager = new Mago3D.ChemicalAccidentManager(options);
+    magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
+    magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
+
+    let timeOptions = {
+      timeScale : 100,
+      year : 2024,
+      month : 2,
+      day : 6,
+      hour : 11,
+      minute : 0,
+      second : 0
+    };
+    if (magoManager.animationTimeController === undefined) {
+      magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
+    }
+    magoManager.animationTimeController.reset(timeOptions);
+    magoManager.animationTimeController.pauseAnimation();
+    console.log('[MainComponent] Start Simulation');
+  }
 }
 
 const getViewer = () => {
@@ -83,7 +148,7 @@ const getViewer = () => {
     <div class="switch-wrapper">
       <h4>사고물질 농도</h4>
       <label>
-        <input type="radio" name="accident-group" checked>
+        <input type="radio" name="accident-group" @change="startSimulation()">
         <span></span>
       </label>
     </div>
@@ -105,14 +170,14 @@ const getViewer = () => {
     <div class="switch-wrapper">
       <h4>예상 피해자 분포</h4>
       <label>
-        <input type="radio" name="victim-group" checked>
+        <input type="radio" name="victim-group">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>예상 피해자 이동동선</h4>
       <label>
-        <input type="radio" name="victim-group">
+        <input type="radio" name="victim-group" @change="startItinerary()">
         <span></span>
       </label>
     </div>
@@ -121,28 +186,28 @@ const getViewer = () => {
     <div class="switch-wrapper">
       <h4>건물 레이어</h4>
       <label>
-        <input type="checkbox" name="victim-group" checked>
+        <input type="checkbox" name="victim-group" @change="toggleDangjinBuildings(getViewer())">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>지형 레이어</h4>
       <label>
-        <input type="checkbox" name="victim-group">
+        <input type="checkbox" name="victim-group" @change="toggleDangjinTerrain(getViewer())">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>반경 레이어(동심원)</h4>
       <label>
-        <input type="checkbox" name="victim-group" @click="initDome()">
+        <input type="checkbox" name="victim-group" @change="toggleRadius(getViewer())">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>그림자 효과</h4>
       <label>
-        <input type="checkbox" name="victim-group" @click="toggleShadow()">
+        <input type="checkbox" name="victim-group" @change="toggleShadow()">
         <span></span>
       </label>
     </div>

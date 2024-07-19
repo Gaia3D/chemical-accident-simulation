@@ -199,7 +199,7 @@ defineExpose({
 <style scoped>
 div.map-controller {
   padding: 6px;
-  display: inline-block;
+  display: block;
 }
 div.map-controller > button {
   width: 36px;
