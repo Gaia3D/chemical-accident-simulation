@@ -21,13 +21,19 @@ onMounted(async () => {
 
 const toggleShadow = () => {
   const viewer = getViewer();
-  if (viewer.scene.shadowMap.enabled) {
-    viewer.scene.shadowMap.enabled = false
+  const scene = viewer.scene;
+  const shadowMap = scene.shadowMap;
+  if (shadowMap.enabled) {
     viewer.scene.globe.enableLighting = false;
+    shadowMap.enabled = false
   } else {
-    viewer.scene.shadowMap.enabled = true
     viewer.scene.globe.enableLighting = true;
-    viewer.scene.shadowMap.darkness = 0.5
+    shadowMap.enabled = true
+    shadowMap.darkness = 0.5
+    //shadowMap.softShadows = true
+    //shadowMap.normalOffset = false
+    //shadowMap.fadingEnabled = false
+    //shadowMap.size = 4096
   }
 }
 

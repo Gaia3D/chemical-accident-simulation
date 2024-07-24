@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vue-tsc -b && vite build",
     "docker-push": "docker login -u gaia3d -p !gaia3dgaia#d! && docker push gaia3d/oms-vue-front",
     "preview": "vite preview"

@@ -47,6 +47,7 @@ export const toggleOsmBuildings = async (viewer : any) => {
 export const toggleDangjinBuildings = async (viewer : any) => {
     const url = "/data/tilesets/dang-jin-building-terrain/tileset.json";
     const buildingsTileset = await Cesium.Cesium3DTileset.fromUrl(url, {});
+    buildingsTileset.maximumScreenSpaceError = 4;
 
     const duplicatedTileset = viewer.scene.primitives._primitives.find((e : any) => {
         return e._url === buildingsTileset._url
