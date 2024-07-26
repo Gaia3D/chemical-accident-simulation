@@ -43,7 +43,8 @@ const paddingZero = (num: number) => {
 }
 
 const startItinerary = () => {
-  const legendSample = [
+  getAnimationTimeController();
+  /*const legendSample = [
     ["1.0", "0.0", "0.0", "1.0", "red"], // red
     ["1.0", "0.5", "0.0", "1.0", "orange"], // orange
     ["1.0", "1.0", "0.0", "1.0", "yellow"], // yellow
@@ -54,7 +55,7 @@ const startItinerary = () => {
     ["0.5", "0.0", "1.0", "1.0", "purple"], // purple
     ["1.0", "0.0", "1.0", "1.0", "magenta"], // magenta
     ["1.0", "0.0", "0.5", "1.0", "pink"], // pink
-  ];
+  ];*/
 
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
@@ -72,23 +73,8 @@ const startItinerary = () => {
 
   magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
   const itineraryManager = magoManager.itineraryManager;
-
-  let timeOptions = {
-    timeScale : 100,
-    year : 2024,
-    month : 2,
-    day : 6,
-    hour : 11,
-    minute : 0,
-    second : 0
-  };
-  if (magoManager.animationTimeController === undefined) {
-    magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
-  }
-
   let thickness = 2.0;
-
-  for (let loop = 0; loop < 1; loop++) {
+  for (let loop = 0; loop < 100; loop++) {
     let padded = paddingZero(loop+1);
     let filePath = itineraryPath + "USER" + padded + ".json";
     let imagePath = "/data/navigations/navigation.png";
@@ -104,7 +90,23 @@ const startItinerary = () => {
   }
 }
 
+const stopSimulation = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+
+  if (magoManager.chemicalAccidentManager) {
+    magoManager.chemicalAccidentManager.setIsDoRender(false);
+  }
+  if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.setIsDoRender(false);
+  }
+}
+
 const startSimulation = () => {
+  console.log('startSimulation');
+  getAnimationTimeController();
+  stopSimulation();
+
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   magoManager.interactionCollection.array[0].setActive(true);
@@ -123,9 +125,42 @@ const startSimulation = () => {
     magoManager.chemicalAccidentManager = new Mago3D.ChemicalAccidentManager(options);
     magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
+  } else {
+    magoManager.chemicalAccidentManager.setIsDoRender(true);
+  }
+}
 
+const startSimulation2d = () => {
+  console.log('startSimulation2d');
+  getAnimationTimeController();
+  stopSimulation();
+
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+
+  const path = "/data/chemicalAccident/output_chemicalAccident_2d";
+  const jsonPath = path + "/JsonIndex2D.json";
+  if (!magoManager.chemicalAccident2dManager) {
+    let options = {
+      magoManager : magoManager,
+      geoJsonIndexFileFolderPath : path,
+      geoJsonIndexFilePath : jsonPath,
+      renderingColorType : 0,
+      renderBorder : true,
+    };
+    magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
+    magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
+  } else {
+    magoManager.chemicalAccident2dManager.setIsDoRender(true);
+  }
+}
+
+const getAnimationTimeController = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  if (magoManager.animationTimeController === undefined) {
     let timeOptions = {
-      timeScale : 100,
+      timeScale : 600000,
       year : 2024,
       month : 2,
       day : 6,
@@ -133,13 +168,11 @@ const startSimulation = () => {
       minute : 0,
       second : 0
     };
-    if (magoManager.animationTimeController === undefined) {
-      magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
-    }
-    magoManager.animationTimeController.reset(timeOptions);
+    magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
+    //magoManager.animationTimeController.reset(timeOptions);
     magoManager.animationTimeController.pauseAnimation();
-    console.log('[MainComponent] Start Simulation');
   }
+  return magoManager.animationTimeController;
 }
 
 const getViewer = () => {
@@ -161,7 +194,7 @@ const getViewer = () => {
     <div class="switch-wrapper">
       <h4>사고물질 노출량</h4>
       <label>
-        <input type="radio" name="accident-group">
+        <input type="radio" name="accident-group" @change="startSimulation2d()">
         <span></span>
       </label>
     </div>
