@@ -14,9 +14,14 @@ const props = defineProps<{
   transferViewer: any;
 }>();
 
+const isLoading = ref(false);
+
 
 onMounted(async () => {
   console.log('[SimulationController] Mounted Slider Component');
+  setTimeout(() => {
+    loadSimulations();
+  }, 2000);
 });
 
 const toggleShadow = () => {
@@ -30,10 +35,6 @@ const toggleShadow = () => {
     viewer.scene.globe.enableLighting = true;
     shadowMap.enabled = true
     shadowMap.darkness = 0.5
-    //shadowMap.softShadows = true
-    //shadowMap.normalOffset = false
-    //shadowMap.fadingEnabled = false
-    //shadowMap.size = 4096
   }
 }
 
@@ -42,21 +43,7 @@ const paddingZero = (num: number) => {
   return (padding + num).slice(-padding.length);
 }
 
-const startItinerary = () => {
-  getAnimationTimeController();
-  /*const legendSample = [
-    ["1.0", "0.0", "0.0", "1.0", "red"], // red
-    ["1.0", "0.5", "0.0", "1.0", "orange"], // orange
-    ["1.0", "1.0", "0.0", "1.0", "yellow"], // yellow
-    ["0.5", "1.0", "0.0", "1.0", "lime"], // lime
-    ["0.0", "1.0", "0.0", "1.0", "green"], // green
-    ["0.0", "0.5", "0.5", "1.0", "cyan"], // cyan
-    ["0.0", "0.0", "1.0", "1.0", "blue"], // blue
-    ["0.5", "0.0", "1.0", "1.0", "purple"], // purple
-    ["1.0", "0.0", "1.0", "1.0", "magenta"], // magenta
-    ["1.0", "0.0", "0.5", "1.0", "pink"], // pink
-  ];*/
-
+const loadItinerary = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
 
@@ -70,11 +57,10 @@ const startItinerary = () => {
     renderThickLine : false,
     samplePointsSize : 0.0
   };
-
   magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
   const itineraryManager = magoManager.itineraryManager;
   let thickness = 2.0;
-  for (let loop = 0; loop < 100; loop++) {
+  for (let loop = 0; loop < 5; loop++) {
     let padded = paddingZero(loop+1);
     let filePath = itineraryPath + "USER" + padded + ".json";
     let imagePath = "/data/navigations/navigation.png";
@@ -87,6 +73,7 @@ const startItinerary = () => {
       animatedIconFilePath : imagePath,
     };
     itineraryManager.newItineraryLayer(layerOptions);
+    itineraryManager.hide();
   }
 }
 
@@ -95,18 +82,41 @@ const stopSimulation = () => {
   const magoManager = magoInstance.getMagoManager();
 
   if (magoManager.chemicalAccidentManager) {
-    magoManager.chemicalAccidentManager.setIsDoRender(false);
+    magoManager.chemicalAccidentManager.hide();
   }
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.setIsDoRender(false);
+    magoManager.chemicalAccident2dManager.hide();
   }
 }
 
-const startSimulation = () => {
-  console.log('startSimulation');
-  getAnimationTimeController();
-  stopSimulation();
+const stopItinerary = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  if (magoManager.itineraryManager) {
+    magoManager.itineraryManager.hide();
+  }
+}
 
+const loadSimulations = () => {
+  getAnimationTimeController();
+  loadItinerary();
+  load3dSimulation();
+  load2dSimulation();
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+
+  isLoading.value = true;
+  const interval = setInterval(() => {
+    if (magoManager.chemicalAccidentManager.isReady() && magoManager.chemicalAccident2dManager.isReady()) {
+      clearInterval(interval);
+      isLoading.value = false;
+    } else {
+      console.log("로드 중...");
+    }
+  }, 1000);
+}
+
+const load3dSimulation = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   magoManager.interactionCollection.array[0].setActive(true);
@@ -120,40 +130,209 @@ const startSimulation = () => {
   if (!magoManager.chemicalAccidentManager) {
     let options = {
       magoManager : magoManager,
-      geoJsonIndexFileFolderPath : path
+      renderingColorType : 2,
+      url : jsonPath,
+      //geoJsonIndexFileFolderPath : path
     };
     magoManager.chemicalAccidentManager = new Mago3D.ChemicalAccidentManager(options);
     magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
-  } else {
-    magoManager.chemicalAccidentManager.setIsDoRender(true);
+
+    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors());
+    magoManager.chemicalAccidentManager.hide();
   }
 }
 
-const startSimulation2d = () => {
-  console.log('startSimulation2d');
-  getAnimationTimeController();
-  stopSimulation();
-
+const load2dSimulation = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-
   const path = "/data/chemicalAccident/output_chemicalAccident_2d";
   const jsonPath = path + "/JsonIndex2D.json";
   if (!magoManager.chemicalAccident2dManager) {
     let options = {
       magoManager : magoManager,
-      geoJsonIndexFileFolderPath : path,
-      geoJsonIndexFilePath : jsonPath,
-      renderingColorType : 0,
+      url : jsonPath,
+      renderingColorType : 2,
       renderBorder : true,
+      textureFilterType : 1, // 0 = NEAREST, 1 = LINEAR
+      //geoJsonIndexFileFolderPath : path,
+      //geoJsonIndexFilePath : jsonPath,
     };
     magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
     magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
-  } else {
-    magoManager.chemicalAccident2dManager.setIsDoRender(true);
+
+    magoManager.chemicalAccident2dManager.setLegendColors(getLegendColors());
+    magoManager.chemicalAccident2dManager.hide();
   }
 }
+
+const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : number, accentuationFactor : number) => {
+  const logMin = Math.log(minValue + 1); // Evitar log(0)
+  const logMax = Math.log(maxValue + 1);
+  const logRange = logMax - logMin;
+  const divisions = [];
+
+  for (let i = 0; i <= numberOfColors; i++) {
+    const normalizedValue = i / numberOfColors;
+    const accentuatedValue = Math.pow(normalizedValue, accentuationFactor);
+    const logValue = logMin + accentuatedValue * logRange;
+    const value = Math.exp(logValue) - 1;
+    divisions.push(value);
+  }
+
+  return divisions;
+}
+
+const get3DLegendColors = () => {
+  const minValue = 0.0;
+  const maxValue = 0.648;
+  const numColors = 12;
+  const accentuationFactor = 15.0;
+  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
+  const accentuationFactorAlpha = 3.0;
+  const alphaValues = getLogDivisions(0.0, 0.99, numColors, accentuationFactorAlpha);
+
+  const legendColors = [];
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.0, legendValues[0]);  // 0
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, 0.0, legendValues[1]);  // 1
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, 0.0, legendValues[2]);  // 2
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, 0.0, legendValues[3]);  // 3
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.0, legendValues[4]);  // 4
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, 0.0, legendValues[5]);  // 5
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(159/255, 255/255, 95/255, alphaValues[6], legendValues[6]);  // 6
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(239/255, 255/255, 15/255, alphaValues[7], legendValues[7]);  // 7
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 191/255, 0/255, alphaValues[8], legendValues[8]);  // 8
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 111/255, 0/255, alphaValues[9], legendValues[9]);  // 9
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 31/255, 0/255, alphaValues[10], legendValues[10]);  // 10
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, alphaValues[11], legendValues[11]);  // 11
+  legendColors.push(LegendColor);
+
+  return legendColors;
+}
+
+const getLegendColors = () => {
+  const minValue = 0.0;
+  const maxValue = 0.648;
+  const numColors = 12;
+  const accentuationFactor = 15.0;
+  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
+
+  // create legend colors.***
+  const legendColors = [];
+
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 128/255, legendValues[0]);  // 0
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, 128/255, legendValues[1]);  // 1
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, 128/255, legendValues[2]);  // 2
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, 128/255, legendValues[3]);  // 3
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 128/255, legendValues[4]);  // 4
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, 128/255, legendValues[5]);  // 5
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(159/255, 255/255, 95/255, 128/255, legendValues[6]);  // 6
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(239/255, 255/255, 15/255, 128/255, legendValues[7]);  // 7
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 191/255, 0/255, 128/255, legendValues[8]);  // 8
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 111/255, 0/255, 128/255, legendValues[9]);  // 9
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 31/255, 0/255, 128/255, legendValues[10]);  // 10
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, 128/255, legendValues[11]);  // 11
+  legendColors.push(LegendColor);
+
+
+  return legendColors;
+}
+
+const startChemicalAccidentConcentration = () => {
+  // 농도
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  stopAllChemicalAccident();
+  if (magoManager.chemicalAccidentManager) {
+    magoManager.chemicalAccidentManager.show();
+  }
+}
+
+const startChemicalAccidentExposure = () => {
+  // 노출량
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  stopAllChemicalAccident();
+  if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.show();
+  }
+}
+
+const startChemicalAccidentAcuteHazard = () => {
+  // 급성 위해도
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  stopAllChemicalAccident();
+  if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.show();
+  }
+}
+
+const stopAllChemicalAccident = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.hide();
+  }
+  if (magoManager.chemicalAccidentManager) {
+    magoManager.chemicalAccidentManager.hide();
+  }
+}
+
+
+const startVictimDistribution = () => {
+  // 피해자 분포
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  stopAllVictim();
+  if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.show();
+  }
+}
+
+const startVictimMovement = () => {
+  // 피해자 이동
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  stopAllVictim();
+  if (magoManager.itineraryManager) {
+    magoManager.itineraryManager.show();
+  }
+}
+
+const stopAllVictim = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  if (magoManager.itineraryManager) {
+    magoManager.itineraryManager.hide();
+  }
+  /*if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.hide();
+  }*/
+}
+
 
 const getAnimationTimeController = () => {
   const magoInstance = props.transferViewer.magoInstance;
@@ -169,7 +348,6 @@ const getAnimationTimeController = () => {
       second : 0
     };
     magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
-    //magoManager.animationTimeController.reset(timeOptions);
     magoManager.animationTimeController.pauseAnimation();
   }
   return magoManager.animationTimeController;
@@ -183,25 +361,28 @@ const getViewer = () => {
 
 <template>
   <div id="simulation-layer" class="layer left top horizontal">
+    <div class="loading" v-show="isLoading">
+      <span>시뮬레이션 데이터 불러오는 중...</span>
+    </div>
     <h3>사고물질 레이어</h3>
     <div class="switch-wrapper">
       <h4>사고물질 농도</h4>
       <label>
-        <input type="radio" name="accident-group" @change="startSimulation()">
+        <input type="radio" name="accident-group" @change="startChemicalAccidentConcentration()">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>사고물질 노출량</h4>
       <label>
-        <input type="radio" name="accident-group" @change="startSimulation2d()">
+        <input type="radio" name="accident-group" @change="startChemicalAccidentExposure()">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>사고물질 급성위해도</h4>
       <label>
-        <input type="radio" name="accident-group">
+        <input type="radio" name="accident-group" @change="startChemicalAccidentAcuteHazard()">
         <span></span>
       </label>
     </div>
@@ -209,14 +390,14 @@ const getViewer = () => {
     <div class="switch-wrapper">
       <h4>예상 피해자 분포</h4>
       <label>
-        <input type="radio" name="victim-group">
+        <input type="radio" name="victim-group" @change="startVictimDistribution()">
         <span></span>
       </label>
     </div>
     <div class="switch-wrapper">
       <h4>예상 피해자 이동동선</h4>
       <label>
-        <input type="radio" name="victim-group" @change="startItinerary()">
+        <input type="radio" name="victim-group" @change="startVictimMovement()">
         <span></span>
       </label>
     </div>
@@ -253,18 +434,52 @@ const getViewer = () => {
   </div>
   <div id="legend-layer" class="layer left top horizontal">
     <h3>범례</h3>
-    <div class="legend">
-
+    <div class="legend-wrap">
+      <div class="legend"></div>
+      <div class="datalist-wrap">
+        <datalist>
+          <option value="0">0.03 ~ </option>
+          <option value="1">0.006 ~ 0.001</option>
+          <option value="2">0.001 ~ 0.005</option>
+          <option value="3">~ 0.001</option>
+        </datalist>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 
+div.loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 1.5em;
+  text-align: center;
+  line-height: 100px;
+  z-index: 10;
+}
+div.loading span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 12px;
+  translate: -50% -50%;
+  line-height: 14px;
+}
+
 div#simulation-layer {
   width: 200px;
   display: inline-block;
   padding-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+  left: 0;
+  top: 0;
 }
 div#simulation-layer h3 {
   font-size: 1.0em;
@@ -287,7 +502,7 @@ div#simulation-layer h3 {
 }
 
 div#legend-layer {
-  width: 100px;
+  width: 130px;
   display: inline-block;
 }
 div#legend-layer h3 {
@@ -296,12 +511,44 @@ div#legend-layer h3 {
   padding: 0;
 }
 
+div.legend-wrap {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 10px 5px;
+}
+
+div.datalist-wrap {
+  display: inline-block;
+  vertical-align: middle;
+}
+div.datalist-wrap datalist {
+  height: 100px;
+  display: grid;
+  grid-auto-flow: dense;
+  position: relative;
+}
+
+div.datalist-wrap datalist > option {
+  margin-top: -0.5em;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
+div.datalist-wrap datalist > option:last-child {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: -0.5em;
+}
+
+
+
 div.legend {
   height: 100px;
   width: 20px;
   background: linear-gradient(red, yellow, green, blue);
   border: 1px solid #464646;
   display: inline-block;
-  margin: 5px;
+  margin: 0px;
+  vertical-align: middle;
 }
 </style>
