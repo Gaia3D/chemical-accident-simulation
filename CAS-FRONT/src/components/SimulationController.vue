@@ -25,7 +25,7 @@ onMounted(async () => {
   }, 2000);
 });
 
-const toggleShadow = () => {
+/*const toggleShadow = () => {
   const viewer = getViewer();
   const scene = viewer.scene;
   const shadowMap = scene.shadowMap;
@@ -37,7 +37,7 @@ const toggleShadow = () => {
     shadowMap.enabled = true
     shadowMap.darkness = 0.5
   }
-}
+}*/
 
 const paddingZero = (num: number) => {
   let padding = "000";
@@ -45,7 +45,7 @@ const paddingZero = (num: number) => {
 }
 
 const loadItinerary = () => {
-  const viewer = getViewer();
+  //const viewer = getViewer();
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
 
@@ -56,7 +56,7 @@ const loadItinerary = () => {
     walkingManMosaicTexPath: walkingManMosaicTexPath,
     walkingManMosaicColumnsCount: 1,
     walkingManMosaicRowsCount: 1,
-    renderThickLine : true,
+    renderThickLine : false,
     samplePointsSize : 0.0
   };
   magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
@@ -110,14 +110,14 @@ const loadItinerary = () => {
       }
 
 
-      viewer.entities.add({
+      /*viewer.entities.add({
         name: "Blue dashed line",
         polyline: {
           positions: polylinePositions,
-          width: 2,
+          width: 1,
           material: Cesium.Color.GREY,
         },
-      });
+      });*/
 
     });
 
