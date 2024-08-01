@@ -10,7 +10,7 @@ window.CESIUM_BASE_URL = import.meta.env.VITE_CESIUM_BASE_URL
 import App from './App.vue'
 import router from './router'
 
-await loadScript("/src/externals/cesium/cesium.js").then(e => {
+await loadScript("/src/externals/cesium/Cesium.js").then(e => {
     /* @ts-ignore */
     console.log(`[Main] Loadded CesiumJS ${Cesium.VERSION}`);
     console.debug(e);

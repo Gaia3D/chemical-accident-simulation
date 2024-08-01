@@ -89,8 +89,9 @@ onMounted(async () => {
 <template>
   <div class="float-layer left top horizontal">
     <div id="info" class="layer">
-      <h2>충청남도 당진시 시곡동 77-5 | 페놀(3,600) 누출</h2>
-      <h4>분석데이터 : 2023/10/22 11:00 기준 (1일 0시간 예측)</h4>
+      <h2>충청남도 당진시 시곡동 77-5 | 페놀(3,600L) 누출</h2>
+      <h4>분석데이터 : 2024/02/06 11:00 기준 (1일 0시간 예측)</h4>
+<!--      <h4>사고원인 : 시설결함</h4>-->
     </div>
     <div class="left vertical">
       <SimulationController :transfer-viewer="transferViewer" ref="simulationController"/>

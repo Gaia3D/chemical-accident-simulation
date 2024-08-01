@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "vite-plugin-top-level-await": "^1.4.2",
     "vite-tsconfig-paths": "^4.3.2",
     "vue": "^3.4.29",
     "vue-plugin-load-script": "^2.1.1",
