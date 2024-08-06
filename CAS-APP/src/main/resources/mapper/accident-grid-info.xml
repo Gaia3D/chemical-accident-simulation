@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gaia3d.casapp.repository.AccidentGridInfoRepository">
+
+    <select id="getGrid" resultType="AccidentGridInfo">
+        select agi.*
+        from accident_grid_info agi
+        inner join accident ac
+            on agi.accident_no = ac.accident_no
+        where agi.accident_no = #{accidentNo}
+        and agi.analysis_time = #{analysisTime}
+        and agi.grid_id = #{gridId}
+    </select>
+
+</mapper>
