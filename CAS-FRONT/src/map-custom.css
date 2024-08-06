@@ -1,3 +1,23 @@
+:root {
+  --base-color: #fffeff;
+  --base-color-hover: #eeeeee;
+
+  --base-color-dark: #f4f8f9;
+
+  --button-color: #c9c9c9;
+  --button-color-hover: #b0b0b0;
+  --button-color-stress: #0089f5;
+  --button-color-stress-hover: #0078e5;
+
+  --shadow-color: #00000020;
+  --font-color: #03090b
+}
+
+div.line {
+  width: 100%;
+  border-bottom: 1px solid #00000010;
+}
+
 .center {
   transform: translate(-50%, 0);
   left: 50%;
@@ -55,7 +75,82 @@
   padding: 8px;
   border-radius: 8px;
   background-color: #ffffff;
-  box-shadow: 0 0 3px 2px #00000012;
+  box-shadow: 0 0 3px 2px var(--shadow-color);
+}
+
+div.non-modal {
+  position: fixed;
+  display: inline-block;
+  left: 50%;
+  top: 50%;
+  max-width: 700px;
+  /* height: 200px; */
+  z-index: 30;
+  translate: -50% -50%;
+  line-height: normal;
+}
+div.non-modal div.layer-contents {
+  padding: 0 5px;
+}
+
+div.non-modal th {
+  background-color: var(--base-color-dark);
+}
+div.non-modal td, div.non-modal th {
+  padding: 20px 10px;
+  border : 1px solid #e2e2e2;
+  vertical-align: middle;
+  min-width: 150px;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+div.non-modal table {
+  display: inline-block;
+  border: 1px solid #f9f9f9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+div.modal-dim {
+  background-color: rgb(0 0 0 / 75%);
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  display: block;
+  z-index: 20;
+  left: 0;
+  top: 0;
+}
+
+.layer > h1 {
+  background-color: #043960;
+  font-size: 13px;
+  padding: 10px 10px;
+  margin: -8px;
+  color: white;
+  text-align: left;
+}
+.layer > h1 button {
+  float: right;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+}
+.layer > h1 button img {
+  width: 100%;
+  height: 100%;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(74deg) brightness(104%) contrast(103%);
+}
+
+.layer-contents {
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 button {
@@ -63,13 +158,13 @@ button {
   font-size: 11px;
   padding: 5px 15px;
   border-radius: 8px;
-  background-color: #e8e8e8;
+  background-color: var(--button-color);
   cursor: pointer;
   border: none;
   outline: none;
 }
 button:hover {
-  background-color: #d8d8d8;
+  background-color: var(--button-color-hover);
   border: none;
 }
 button:active, button:focus {
@@ -80,7 +175,6 @@ button.toggle {
   background-color: #b9b9b9;
   box-shadow: inset 0 0 3px 2px rgba(0, 0, 0, 0.04);
 }
-
 
 
 /* switch */
@@ -106,7 +200,7 @@ div.switch-wrapper > label {
   transition: 0.2s;
 }
 div.switch-wrapper > label:hover {
-  background: #efefef;
+  background: var(--button-color-hover);
 }
 div.switch-wrapper > label > span {
   position: absolute;
@@ -116,29 +210,29 @@ div.switch-wrapper > label > span {
   width: 12px;
   height: 12px;
   border-radius: 20px;
-  background: #afafaf;
+  background: var(--button-color);
   transition: 0.2s;
 }
 /* label color */
 div.switch-wrapper > label:has(input:checked) {
-  background: #1b95ff;
-  border: 2px solid #1b95ff;
+  background: var(--button-color-stress);
+  border: 2px solid var(--button-color-stress);
 }
 div.switch-wrapper > label:hover:has(input:checked) {
-  background: #1b95ff;
+  background: var(--button-color-stress);
 }
 /* move */
 div.switch-wrapper input:checked+span {
   left: 18px;
   background: #fff;
-  box-shadow: 1px 2px 3px #00000020;
+  box-shadow: 1px 2px 3px var(--shadow-color);
 }
 
 
 div.switch-wrapper > label:has(input[type='checkbox']:checked) {
-  background: #1b95ff;
-  border: 2px solid #1b95ff;
+  background: var(--button-color-stress);
+  border: 2px solid var(--button-color-stress);
 }
 div.switch-wrapper > label:hover:has(input[type='checkbox']:checked) {
-  background: #1b95ff;
+  background: var(--button-color-stress);
 }

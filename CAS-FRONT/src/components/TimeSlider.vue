@@ -62,6 +62,36 @@ const getAnimationTimeController = () => {
 
 let playIntervalEvent: any = undefined;
 
+const prev = () => {
+  const nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
+  let timeScale = parseInt(timeTable.value.timeScale);
+  if (nowUnixTimeMilisec <= 3600000) {
+    timeScale = 60000;
+  }
+  let remainValue = nowUnixTimeMilisec % timeScale;
+  if (remainValue === 0) {
+    timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) - timeScale;
+  } else {
+    timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) - (remainValue);
+  }
+  setTime();
+}
+
+const next = () => {
+  const nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
+  let timeScale = parseInt(timeTable.value.timeScale);
+  if (nowUnixTimeMilisec <= 3600000) {
+    timeScale = 60000;
+  }
+  let remainValue = nowUnixTimeMilisec % timeScale;
+  if (remainValue === 0) {
+    timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + timeScale;
+  } else {
+    timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + (timeScale - remainValue);
+  }
+  setTime();
+}
+
 const play = () => {
   const animationTimeController = getAnimationTimeController();
 
@@ -72,13 +102,14 @@ const play = () => {
 
   playIntervalEvent = setInterval(() => {
     let nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
-    let remainValue = nowUnixTimeMilisec % timeTable.value.timeScale;
+    let timeScale = parseInt(timeTable.value.timeScale);
+    let remainValue = nowUnixTimeMilisec % timeScale;
     if (remainValue === 0) {
-      timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + timeTable.value.timeScale;
+      timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + timeScale;
     } else {
-      timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + (timeTable.value.timeScale - remainValue);
+      timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + (timeScale - remainValue);
     }
-    setTime();
+    setTime(false);
 
     if (timeTable.value.nowUnixTimeMilisec > 86400000) {
       clearInterval(playIntervalEvent);
@@ -108,11 +139,29 @@ const stop = () => {
 }
 
 
-const setTime = () => {
+const setTime = (snap = false) => {
   const animationTimeController = getAnimationTimeController();
+  let nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
+  let scale = parseInt(timeTable.value.timeScale);
+  if (nowUnixTimeMilisec <= 3600000) {
+    scale = 60000;
+  }
+
+  if (snap) {
+    let remainValue = nowUnixTimeMilisec % scale;
+    if (remainValue === 0) {
+      timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
+    } else {
+      if (remainValue > scale / 2) {
+        timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) + (scale - remainValue);
+      } else {
+        timeTable.value.nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec) - remainValue;
+      }
+    }
+  }
+
   const startMilisec = animationTimeController._animationStartUnixTimeMilisec;
   animationTimeController._currentUnixTimeMilisec = startMilisec + parseInt(timeTable.value.nowUnixTimeMilisec);
-
   let startDateTime = new Date(startMilisec);
   let currentDateTime = new Date(animationTimeController._currentUnixTimeMilisec);
   let endDateTime = new Date(startMilisec + 86400000);
@@ -146,6 +195,20 @@ const paddingZero = (num: number) => {
 
 onMounted(async () => {
   console.log('[MainComponent] Mounted Slider Component');
+
+  window.addEventListener('message', (event) => {
+    console.log(event);
+    console.log("Message Received")
+
+    const data = event.data;
+    if (data) {
+      if (data.action === "play") {
+        play();
+      } else if (data.action === "stop") {
+        stop();
+      }
+    }
+  });
 });
 
 const getViewer = () => {
@@ -155,85 +218,82 @@ const getViewer = () => {
 </script>
 
 <template>
-  <div class="float-layer right bottom horizontal">
-    <div id="speed-controller" class="layer">
-      <div class="vertical">
-        <label>
-          <input id="speed-1" type="radio" name="input-format" value="10" @click="setTimeScale(600000)" checked/>
-          <span>10분</span>
-        </label>
-        <label>
-          <input id="speed-2" type="radio" name="input-format" value="30"  @click="setTimeScale(1800000)"/>
-          <span>30분</span>
-        </label>
-        <label>
-          <input id="speed-3" type="radio" name="input-format" value="60"  @click="setTimeScale(3600000)"/>
-          <span>1시간</span>
-        </label>
-        <label>
-          <input id="speed-4" type="radio" name="input-format" value="180"  @click="setTimeScale(10800000)"/>
-          <span>3시간</span>
-        </label>
-        <label>
-          <input id="speed-5" type="radio" name="input-format" value="360"  @click="setTimeScale(21600000)"/>
-          <span>6시간</span>
-        </label>
-      </div>
+  <div id="speed-controller" class="layer">
+    <div class="vertical">
+      <label>
+        <input id="speed-1" type="radio" name="input-format" value="10" @click="setTimeScale(600000)" checked/>
+        <span>10분</span>
+      </label>
+      <label>
+        <input id="speed-2" type="radio" name="input-format" value="30"  @click="setTimeScale(1800000)"/>
+        <span>30분</span>
+      </label>
+      <label>
+        <input id="speed-3" type="radio" name="input-format" value="60"  @click="setTimeScale(3600000)"/>
+        <span>1시간</span>
+      </label>
+      <label>
+        <input id="speed-4" type="radio" name="input-format" value="180"  @click="setTimeScale(10800000)"/>
+        <span>3시간</span>
+      </label>
+      <label>
+        <input id="speed-5" type="radio" name="input-format" value="360"  @click="setTimeScale(21600000)"/>
+        <span>6시간</span>
+      </label>
     </div>
-    <div id="time-slider" class="layer">
-      <input type="range" step="600000" min="0" max="86400000" value="1000" v-model="timeTable.nowUnixTimeMilisec" id="myRange" list="tick-marks" @change="setTime" @input="setTime">
-      <datalist id="tick-marks">
-        <option value="0"        label="00H"></option>
-        <option value="3600000"  label="01H">1</option>
-        <option value="7200000"  label="02H">2</option>
-        <option value="10800000" label="03H"></option>
-        <option value="14400000" label="04H"></option>
-        <option value="18000000" label="05H"></option>
-        <option value="21600000" label="06H"></option>
-        <option value="25200000" label="07H"></option>
-        <option value="28800000" label="08H"></option>
-        <option value="32400000" label="09H"></option>
-        <option value="36000000" label="10H"></option>
-        <option value="39600000" label="11H"></option>
-        <option value="43200000" label="12H"></option>
-        <option value="46800000" label="13H"></option>
-        <option value="50400000" label="14H"></option>
-        <option value="54000000" label="15H"></option>
-        <option value="57600000" label="16H"></option>
-        <option value="61200000" label="17H"></option>
-        <option value="64800000" label="18H"></option>
-        <option value="68400000" label="19H"></option>
-        <option value="72000000" label="20H"></option>
-        <option value="75600000" label="21H"></option>
-        <option value="79200000" label="22H"></option>
-        <option value="82800000" label="23H"></option>
-        <option value="86400000" label="24H"></option>
-      </datalist>
-      <div id="time-controller" class="vertical center">
-<!--        <button @click="playTime">
-          <img src="/src/assets/images/icons/back.png" alt="play button"/>
-        </button>-->
-        <button @click="play" v-show="!timeTable.isPlaying">
-          <img src="/src/assets/images/icons/play.png" alt="play button"/>
-        </button>
-        <button @click="pause" v-show="timeTable.isPlaying">
-          <img src="/src/assets/images/icons/pause.png" alt="pause button"/>
-        </button>
-        <button @click="stop">
-          <img src="/src/assets/images/icons/stop.png" alt="reset button"/>
-        </button>
-<!--        <button @click="playTime">
-          <img src="/src/assets/images/icons/forward.png" alt="play button"/>
-        </button>-->
-        <!--        <button @click="playTime" v-show="timeTable.isPlaying">Play</button>
-                <button @click="pauseTime" v-show="!timeTable.isPlaying">Pause</button>
-        &lt;!&ndash;        <button>Stop</button>&ndash;&gt;
-                <button @click="resetTime">Reset</button>-->
-
-      </div>
-      <div id="time-info">
-        2021-09-01 12:00 / 2021-09-02 12:00
-      </div>
+  </div>
+  <div id="time-slider" class="layer">
+    <input type="range" step="60000" min="0" max="86400000" value="1000" v-model="timeTable.nowUnixTimeMilisec" id="myRange" list="tick-marks" @change="setTime(true)" @input="setTime(true)">
+    <datalist id="tick-marks">
+      <option value="0"        label="00H"></option>
+      <option value="3600000"  label="01H">1</option>
+      <option value="7200000"  label="02H">2</option>
+      <option value="10800000" label="03H"></option>
+      <option value="14400000" label="04H"></option>
+      <option value="18000000" label="05H"></option>
+      <option value="21600000" label="06H"></option>
+      <option value="25200000" label="07H"></option>
+      <option value="28800000" label="08H"></option>
+      <option value="32400000" label="09H"></option>
+      <option value="36000000" label="10H"></option>
+      <option value="39600000" label="11H"></option>
+      <option value="43200000" label="12H"></option>
+      <option value="46800000" label="13H"></option>
+      <option value="50400000" label="14H"></option>
+      <option value="54000000" label="15H"></option>
+      <option value="57600000" label="16H"></option>
+      <option value="61200000" label="17H"></option>
+      <option value="64800000" label="18H"></option>
+      <option value="68400000" label="19H"></option>
+      <option value="72000000" label="20H"></option>
+      <option value="75600000" label="21H"></option>
+      <option value="79200000" label="22H"></option>
+      <option value="82800000" label="23H"></option>
+      <option value="86400000" label="24H"></option>
+    </datalist>
+    <div id="time-controller" class="vertical center">
+      <button @click="prev">
+        <img src="/src/assets/images/icons/back.png" alt="play button"/>
+      </button>
+      <button @click="play" v-show="!timeTable.isPlaying">
+        <img src="/src/assets/images/icons/play.png" alt="play button"/>
+      </button>
+      <button @click="pause" v-show="timeTable.isPlaying">
+        <img src="/src/assets/images/icons/pause.png" alt="pause button"/>
+      </button>
+      <button @click="stop">
+        <img src="/src/assets/images/icons/stop.png" alt="reset button"/>
+      </button>
+      <button @click="next">
+        <img src="/src/assets/images/icons/forward.png" alt="play button"/>
+      </button>
+      <!--        <button @click="playTime" v-show="timeTable.isPlaying">Play</button>
+              <button @click="pauseTime" v-show="!timeTable.isPlaying">Pause</button>
+      &lt;!&ndash;        <button>Stop</button>&ndash;&gt;
+              <button @click="resetTime">Reset</button>-->
+    </div>
+    <div id="time-info">
+      2021-09-01 12:00 / 2021-09-02 12:00
     </div>
   </div>
 </template>
@@ -343,7 +403,7 @@ datalist#tick-marks > option:last-child {
   left: 15px;
   bottom: 15px;
   border-radius: 8px;
-  background-color: #f1f1f1;
+  background-color: var(--base-color-dark);
   padding: 8px 20px;
   font-size: 11px;
   color: #777777;

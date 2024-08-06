@@ -41,6 +41,19 @@ onMounted(async () => {
 
 const trackEntities : any[] = [];
 
+const layerState = ref({
+  layer: true,
+  legend: true
+})
+
+const toggleLayer = () => {
+  layerState.value.layer = !layerState.value.layer;
+}
+
+const toggleLegend = () => {
+  layerState.value.legend = !layerState.value.legend;
+}
+
 const paddingZero = (num: number) => {
   let padding = "000";
   return (padding + num).slice(-padding.length);
@@ -78,10 +91,10 @@ const loadItinerary = () => {
     };
 
     fetch(filePath, {method: "GET"}).then((response) => {
-      console.log("response", response);
+      //console.log("response", response);
       return response.json()
     }).then((json) => {
-      console.log("json", json);
+      //console.log("json", json);
 
       const centerGeographicCoord = json.centerGeographicCoord;
       const localPositions = json.localPositions;
@@ -90,7 +103,7 @@ const loadItinerary = () => {
       //const cartographic = Cesium.Cartographic.fromCartesian(worldCoord);
       const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(worldCoord);
 
-      console.log("worldCoord", worldCoord);
+      //console.log("worldCoord", worldCoord);
       //console.log("cartographic", cartographic);
 
       const polylinePositions : any = [];
@@ -131,31 +144,11 @@ const loadItinerary = () => {
   }
 }
 
-/*const stopSimulation = () => {
-  const magoInstance = props.transferViewer.magoInstance;
-  const magoManager = magoInstance.getMagoManager();
-
-  if (magoManager.chemicalAccidentManager) {
-    magoManager.chemicalAccidentManager.hide();
-  }
-  if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.hide();
-  }
-}
-
-const stopItinerary = () => {
-  const magoInstance = props.transferViewer.magoInstance;
-  const magoManager = magoInstance.getMagoManager();
-  if (magoManager.itineraryManager) {
-    magoManager.itineraryManager.hide();
-  }
-}*/
-
 const loadSimulations = () => {
   getAnimationTimeController();
-  loadItinerary();
   load3dSimulation();
   load2dSimulation();
+  loadItinerary();
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
 
@@ -514,90 +507,109 @@ const getViewer = () => {
 
 <template>
   <div id="simulation-layer" class="layer left top horizontal">
-    <h1>레이어</h1>
-    <div class="loading" v-show="isLoading">
-      <span>데이터 로드 중</span>
+    <h1>
+      레이어
+      <button class="close" @click="toggleLayer()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
+    </h1>
+    <div class="layer-contents horizontal" v-show="layerState.layer">
+      <div class="loading" v-show="isLoading">
+        <span>데이터 로드 중</span>
+      </div>
+      <h3>사고물질 레이어</h3>
+      <div class="switch-wrapper">
+        <h4>사고물질 농도 (3D)</h4>
+        <label>
+          <input type="radio" name="accident-group" @change="startChemicalAccidentConcentration()">
+          <span></span>
+        </label>
+      </div>
+      <div class="switch-wrapper">
+        <h4>사고물질 농도 (지면)</h4>
+        <label>
+          <input type="radio" name="accident-group" @change="startChemicalAccidentConcentration()">
+          <span></span>
+        </label>
+      </div>
+      <div class="switch-wrapper">
+        <h4>사고물질 급성위해도</h4>
+        <h4>(위치정보 미확인 피해등급)</h4>
+        <label>
+          <input type="radio" name="accident-group" @change="startChemicalAccidentAcuteHazard()">
+          <span></span>
+        </label>
+      </div>
+      <div class="line"></div>
+      <h3>예상피해자 레이어</h3>
+      <div class="switch-wrapper">
+        <h4>예상 피해자 분포</h4>
+        <label>
+          <input type="radio" name="victim-group" @change="startVictimDistribution()">
+          <span></span>
+        </label>
+      </div>
+      <div class="switch-wrapper">
+        <h4>예상 피해자 이동동선</h4>
+        <label>
+          <input type="radio" name="victim-group" @change="startVictimMovement()">
+          <span></span>
+        </label>
+      </div>
+      <div class="switch-wrapper">
+        <h4>개인별 상세 동선</h4>
+        <label>
+          <input type="radio" name="victim-group" @change="startVictimMovement()">
+          <span></span>
+        </label>
+      </div>
+      <div class="line"></div>
+      <h3>기타 레이어</h3>
+      <div class="switch-wrapper">
+        <h4>건물 레이어</h4>
+        <label>
+          <input type="checkbox" name="victim-group" @change="toggleDangjinBuildings(getViewer())">
+          <span></span>
+        </label>
+      </div>
+      <div class="switch-wrapper">
+        <h4>지형 레이어</h4>
+        <label>
+          <input type="checkbox" name="victim-group" @change="toggleDangjinTerrain(getViewer())">
+          <span></span>
+        </label>
+      </div>
+      <div class="switch-wrapper">
+        <h4>반경 레이어(동심원)</h4>
+        <label>
+          <input type="checkbox" name="victim-group" @change="toggleRadius(getViewer())" checked>
+          <span></span>
+        </label>
+      </div>
+<!--      <div class="switch-wrapper">
+        <h4>그림자 효과</h4>
+        <label>
+          <input type="checkbox" name="victim-group" @change="">
+          <span></span>
+        </label>
+      </div>-->
     </div>
-    <h3>사고물질 레이어</h3>
-    <div class="switch-wrapper">
-      <h4>사고물질 농도</h4>
-      <label>
-        <input type="radio" name="accident-group" @change="startChemicalAccidentConcentration()">
-        <span></span>
-      </label>
-    </div>
-    <div class="switch-wrapper">
-      <h4>사고물질 노출량</h4>
-      <label>
-        <input type="radio" name="accident-group" @change="startChemicalAccidentExposure()">
-        <span></span>
-      </label>
-    </div>
-    <div class="switch-wrapper">
-      <h4>사고물질 급성위해도</h4>
-      <label>
-        <input type="radio" name="accident-group" @change="startChemicalAccidentAcuteHazard()">
-        <span></span>
-      </label>
-    </div>
-    <h3>예상피해자 레이어</h3>
-    <div class="switch-wrapper">
-      <h4>예상 피해자 분포</h4>
-      <label>
-        <input type="radio" name="victim-group" @change="startVictimDistribution()">
-        <span></span>
-      </label>
-    </div>
-    <div class="switch-wrapper">
-      <h4>예상 피해자 이동동선</h4>
-      <label>
-        <input type="radio" name="victim-group" @change="startVictimMovement()">
-        <span></span>
-      </label>
-    </div>
-
-    <h3>기타 레이어</h3>
-    <div class="switch-wrapper">
-      <h4>건물 레이어</h4>
-      <label>
-        <input type="checkbox" name="victim-group" @change="toggleDangjinBuildings(getViewer())">
-        <span></span>
-      </label>
-    </div>
-    <div class="switch-wrapper">
-      <h4>지형 레이어</h4>
-      <label>
-        <input type="checkbox" name="victim-group" @change="toggleDangjinTerrain(getViewer())">
-        <span></span>
-      </label>
-    </div>
-    <div class="switch-wrapper">
-      <h4>반경 레이어(동심원)</h4>
-      <label>
-        <input type="checkbox" name="victim-group" @change="toggleRadius(getViewer())" checked>
-        <span></span>
-      </label>
-    </div>
-<!--    <div class="switch-wrapper">
-      <h4>그림자 효과</h4>
-      <label>
-        <input type="checkbox" name="victim-group" @change="toggleShadow()">
-        <span></span>
-      </label>
-    </div>-->
   </div>
   <div id="legend-layer" class="layer left top horizontal">
-    <h1>범례</h1>
-    <h3>페놀 농도</h3>
-    <div class="legend-wrap">
-      <div class="legend"></div>
-      <div class="datalist-wrap">
-        <datalist>
-          <option value="0">0.03 ~ </option>
-          <option value="1">0.006 ~ 0.001</option>
-          <option value="2">0.001 ~ 0.005</option>
-          <option value="3">~ 0.001</option>
-        </datalist>
+    <h1>
+      범례
+      <button class="close" @click="toggleLegend()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
+    </h1>
+    <div class="layer-contents horizontal" v-show="layerState.legend">
+      <h3>페놀 농도</h3>
+      <div class="legend-wrap">
+        <div class="legend"></div>
+        <div class="datalist-wrap">
+          <datalist>
+            <option value="0">0.03 ~ </option>
+            <option value="1">0.006 ~ 0.001</option>
+            <option value="2">0.001 ~ 0.005</option>
+            <option value="3">~ 0.001</option>
+          </datalist>
+        </div>
       </div>
     </div>
   </div>
@@ -606,12 +618,29 @@ const getViewer = () => {
 <style scoped>
 
 h1 {
-  background-color: #003a8f;
+  background-color: #043960;
   font-size: 13px;
   padding: 10px 10px;
   margin: -8px;
-  margin-bottom: 10px;
   color: white;
+}
+
+h1 button {
+  float: right;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+}
+
+h1 button img {
+  width: 100%;
+  height: 100%;
+  filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(74deg) brightness(104%) contrast(103%);
 }
 
 div.loading {
@@ -637,9 +666,8 @@ div.loading span {
 }
 
 div#simulation-layer {
-  width: 200px;
+  width: 225px;
   display: inline-block;
-  padding-bottom: 12px;
   position: relative;
   overflow: hidden;
   left: 0;
@@ -653,20 +681,23 @@ div#simulation-layer h3 {
 
 .switch-wrapper {
   display: inline-block;
-  width: 185px;
+  width: 100%
 }
 .switch-wrapper > h4 {
-  min-width: 135px;
   display: inline-block;
   text-align: left;
   vertical-align: middle;
   font-size: 0.9em;
   font-weight: normal;
   margin: 0 5px;
+  width: 160px;
+  line-height: normal;
+  word-break: keep-all;
+
 }
 
 div#legend-layer {
-  /*width: 130px;*/
+  min-width: 140px;
   display: inline-block;
   overflow: hidden;
 }
