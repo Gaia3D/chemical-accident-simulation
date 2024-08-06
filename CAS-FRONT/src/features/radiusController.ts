@@ -20,10 +20,10 @@ export const toggleRadius = async (viewer : any) => {
         name: "Dome",
         position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
         ellipsoid: {
-            radii: new Cesium.Cartesian3(10, 10, 10),
+            radii: new Cesium.Cartesian3(1, 1, 1),
             maximumCone: Cesium.Math.PI_OVER_TWO,
             material: Cesium.Color.RED.withAlpha(innerFactor),
-            outline: true,
+            outline: false,
             outlineColor: Cesium.Color.RED.withAlpha(outerFactor),
         },
         label: {
@@ -42,11 +42,12 @@ export const toggleRadius = async (viewer : any) => {
         name: "Dome",
         position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
         ellipsoid: {
-            radii: new Cesium.Cartesian3(range, range, range),
+            radii: new Cesium.Cartesian3(range, range, 10),
             maximumCone: Cesium.Math.PI_OVER_TWO,
             material: Cesium.Color.RED.withAlpha(innerFactor),
-            outline: true,
+            outline: false,
             outlineColor: Cesium.Color.RED.withAlpha(outerFactor),
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         },
     });
 
@@ -54,10 +55,10 @@ export const toggleRadius = async (viewer : any) => {
         name: "Dome",
         position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
         ellipsoid: {
-            radii: new Cesium.Cartesian3(range * 2, range * 2, range * 2),
+            radii: new Cesium.Cartesian3(range * 2, range * 2, 10),
             maximumCone: Cesium.Math.PI_OVER_TWO,
             material: Cesium.Color.DARKORANGE.withAlpha(innerFactor),
-            outline: true,
+            outline: false,
             outlineColor: Cesium.Color.DARKORANGE.withAlpha(outerFactor),
         },
     });
@@ -66,10 +67,10 @@ export const toggleRadius = async (viewer : any) => {
         name: "Dome",
         position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
         ellipsoid: {
-            radii: new Cesium.Cartesian3(range * 3, range * 3, range * 3),
+            radii: new Cesium.Cartesian3(range * 3, range * 3, 10),
             maximumCone: Cesium.Math.PI_OVER_TWO,
             material: Cesium.Color.GREEN.withAlpha(innerFactor),
-            outline: true,
+            outline: false,
             outlineColor: Cesium.Color.GREEN.withAlpha(outerFactor),
         },
     });
