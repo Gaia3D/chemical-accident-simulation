@@ -526,7 +526,7 @@ const getViewer = () => {
       <div class="switch-wrapper">
         <h4>사고물질 농도 (지면)</h4>
         <label>
-          <input type="radio" name="accident-group" @change="startChemicalAccidentConcentration()">
+          <input type="radio" name="accident-group" @change="startChemicalAccidentExposure()">
           <span></span>
         </label>
       </div>
