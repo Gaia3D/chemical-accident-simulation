@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import {onMounted} from "vue";
+import {onMounted, ref} from "vue";
 import "../map-custom.css";
+import LineChart from "./LineChart.vue";
+
+const line = ref();
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -23,12 +26,12 @@ const getViewer = () => {
 
 <template>
   <div id="chart-layer" class="layer left top">
-    chart-layer
+    <LineChart ref="line"/>
   </div>
 </template>
-
 <style scoped>
 #chart-layer {
   width: calc(100vw - 40px);
+  height: 400px;
 }
 </style>

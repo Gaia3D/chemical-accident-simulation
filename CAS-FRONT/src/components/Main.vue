@@ -39,6 +39,7 @@ const options = ref({
   fullscreenButton: false,
   geocoder: false,
   baseLayerPicker: false,
+  shouldAnimate: true,
 });
 
 const layerState = ref({
@@ -76,7 +77,7 @@ onMounted(async () => {
   transferViewer.value.viewer = viewer.value;
   transferViewer.value.magoInstance = magoInstance.value;
 
-  viewer.value.scene.globe.depthTestAgainstTerrain = true;
+  viewer.value.scene.globe.depthTestAgainstTerrain = false;
 
   const dateObject = new Date()
   const options = {

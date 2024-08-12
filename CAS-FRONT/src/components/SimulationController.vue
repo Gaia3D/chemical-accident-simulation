@@ -22,22 +22,21 @@ onMounted(async () => {
   setTimeout(() => {
     toggleRadius(getViewer());
     loadSimulations();
+
+
+    /*const lonlat = {
+      lon: 126.65403123232736,
+      lat: 36.90329299539047
+    }
+    const viewer = getViewer();
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lonlat.lon, lonlat.lat),
+      model: {
+        uri: "/data/waves/ocean_wave_test.glb",
+      },
+    });*/
   }, 2000);
 });
-
-/*const toggleShadow = () => {
-  const viewer = getViewer();
-  const scene = viewer.scene;
-  const shadowMap = scene.shadowMap;
-  if (shadowMap.enabled) {
-    viewer.scene.globe.enableLighting = false;
-    shadowMap.enabled = false
-  } else {
-    viewer.scene.globe.enableLighting = true;
-    shadowMap.enabled = true
-    shadowMap.darkness = 0.5
-  }
-}*/
 
 const trackEntities : any[] = [];
 
@@ -171,7 +170,9 @@ const load3dSimulation = () => {
   magoManager.interactionCollection.array[1].setActive(true);
   magoManager.interactionCollection.array[1].setTargetType(Mago3D.DataType.NATIVE);
 
-  const path = "/data/chemicalAccident/output_chemicalAccident";
+  //output_chemAcc_20240805
+  //const path = "/data/chemicalAccident/output_chemicalAccident";
+  const path = "/data/chemicalAccident/output_chemAcc_20240805";
   const jsonPath = path + "/JsonIndex.json";
 
   if (!magoManager.chemicalAccidentManager) {
