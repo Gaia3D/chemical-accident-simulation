@@ -86,6 +86,7 @@ export const toggleRadius = async (viewer : any) => {
             bottomRadius: range,
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
             outline: true,
+            outlineColor: Cesium.Color.GREY.withAlpha(outerFactor),
             fill: false,
         },
     });
@@ -106,6 +107,7 @@ export const toggleRadius = async (viewer : any) => {
             bottomRadius: range * 2,
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
             outline: true,
+            outlineColor: Cesium.Color.GREY.withAlpha(outerFactor),
             fill: false,
         },
     });
@@ -126,6 +128,7 @@ export const toggleRadius = async (viewer : any) => {
             bottomRadius: range * 3,
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
             outline: true,
+            outlineColor: Cesium.Color.GREY.withAlpha(outerFactor),
             fill: false,
         },
     });

@@ -1,8 +1,10 @@
 <template>
-  <Line id="line-chart"
-      :options="chartOptions"
-      :data="chartData"
-  />
+  <div id="line-chart-wrapper">
+    <Line
+          :options="chartOptions"
+          :data="chartData"
+    />
+  </div>
 </template>
 
 <script>
@@ -11,11 +13,11 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 const data = {
-  labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+  labels: ["0", "1", "2", "3", "4", "5", "0", "1", "2", "3", "4", "5", "0", "1", "2", "3", "4", "5", "0", "1", "2", "3", "4", "5"],
   datasets: [
     {
-      label: "# of Votes",
-      data: [12, 19, 3, 5, 2, 3],
+      label: "사고물질 농도",
+      data: [12, 19, 3, 5, 2, 3, 12, 19, 3, 5, 2, 3, 12, 19, 3, 5, 2, 3, 12, 19, 3, 5, 2, 3],
     },
   ],
 };
@@ -38,7 +40,7 @@ export default {
 </script>
 
 <style scoped>
-#line-chart {
+#line-chart-wrapper {
   width: 100%;
   height: 100%;
 }

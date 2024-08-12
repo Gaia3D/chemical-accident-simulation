@@ -32,6 +32,6 @@ const getViewer = () => {
 <style scoped>
 #chart-layer {
   width: calc(100vw - 40px);
-  height: 400px;
+  height: 200px;
 }
 </style>
