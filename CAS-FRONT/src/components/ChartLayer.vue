@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import "../map-custom.css";
-import LineChart from "./LineChart.vue";
+import CasLineChart from "./CasLineChart.vue";
 
-const line = ref();
+const lineChart = ref();
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -26,7 +26,7 @@ const getViewer = () => {
 
 <template>
   <div id="chart-layer" class="layer left top">
-    <LineChart ref="line"/>
+    <CasLineChart ref="lineChart"/>
   </div>
 </template>
 <style scoped>

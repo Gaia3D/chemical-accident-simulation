@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import { Line } from 'vue-chartjs'
+import { Line } from 'vue-chartjs';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
@@ -25,7 +25,7 @@ const data = {
 // resize ratio
 
 export default {
-  name: 'LineChart',
+  name: 'CasLineChart',
   components: { Line },
   data() {
     return {
