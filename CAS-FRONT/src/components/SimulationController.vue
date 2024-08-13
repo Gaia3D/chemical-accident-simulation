@@ -4,6 +4,7 @@ import "../map-custom.css";
 import {toggleDangjinTerrain} from "../features/terrainController.ts";
 import {toggleDangjinBuildings} from "../features/buildingTilesetController.ts";
 import {toggleRadius} from "../features/radiusController.ts";
+import { store } from "../store/store";
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -14,14 +15,11 @@ const props = defineProps<{
   transferViewer: any;
 }>();
 
-const isLoading = ref(true);
-
-
 onMounted(async () => {
   console.log('[SimulationController] Mounted Slider Component');
   setTimeout(() => {
     toggleRadius(getViewer());
-    loadSimulations();
+    //loadSimulations();
 
 
     /*const lonlat = {
@@ -151,11 +149,11 @@ const loadSimulations = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
 
-  isLoading.value = true;
+  store.showLoading();
   const interval = setInterval(() => {
     if (magoManager.chemicalAccidentManager.isReady() && magoManager.chemicalAccident2dManager.isReady()) {
       clearInterval(interval);
-      isLoading.value = false;
+      store.hideLoading();
     } else {
       console.log("로드 중...");
     }
@@ -513,9 +511,6 @@ const getViewer = () => {
       <button class="close" @click="toggleLayer()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
     </h1>
     <div class="layer-contents horizontal" v-show="layerState.layer">
-      <div class="loading" v-show="isLoading">
-        <span>데이터 로드 중</span>
-      </div>
       <h3>사고물질 레이어</h3>
       <div class="switch-wrapper">
         <h4>사고물질 농도 (3D)</h4>
@@ -618,15 +613,7 @@ const getViewer = () => {
 
 <style scoped>
 
-h1 {
-  background-color: #043960;
-  font-size: 13px;
-  padding: 10px 10px;
-  margin: -8px;
-  color: white;
-}
-
-h1 button {
+/*h1 button {
   float: right;
   background: none;
   border: none;
@@ -642,7 +629,7 @@ h1 button img {
   width: 100%;
   height: 100%;
   filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(74deg) brightness(104%) contrast(103%);
-}
+}*/
 
 div.loading {
   position: absolute;

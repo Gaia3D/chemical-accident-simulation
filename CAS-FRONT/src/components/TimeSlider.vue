@@ -36,6 +36,8 @@ const timeTable = ref<any>({
   isPlaying : false
 });
 
+const percentage = ref({'width' : '0%'});
+
 const setTimeScale = (timeScale: number) => {
   const animationTimeController = getAnimationTimeController();
   animationTimeController._timeScale = timeScale;
@@ -160,6 +162,8 @@ const setTime = (snap = false) => {
     }
   }
 
+  percentage.value.width = `${(parseInt(timeTable.value.nowUnixTimeMilisec) / 86400000) * 100}%`;
+
   const startMilisec = animationTimeController._animationStartUnixTimeMilisec;
   animationTimeController._currentUnixTimeMilisec = startMilisec + parseInt(timeTable.value.nowUnixTimeMilisec);
   let startDateTime = new Date(startMilisec);
@@ -218,7 +222,7 @@ const getViewer = () => {
 </script>
 
 <template>
-  <div id="speed-controller" class="layer">
+  <div id="speed-controller" class="">
     <div class="vertical">
       <label>
         <input id="speed-1" type="radio" name="input-format" value="10" @click="setTimeScale(600000)" checked/>
@@ -244,6 +248,9 @@ const getViewer = () => {
   </div>
   <div id="time-slider" class="layer">
     <input type="range" step="60000" min="0" max="86400000" value="1000" v-model="timeTable.nowUnixTimeMilisec" id="myRange" list="tick-marks" @change="setTime(true)" @input="setTime(true)">
+    <div class="bar-wrap">
+      <div class="bar" :style="percentage" style></div>
+    </div>
     <datalist id="tick-marks">
       <option value="0"        label="00H"></option>
       <option value="3600000"  label="01H">1</option>
@@ -300,6 +307,10 @@ const getViewer = () => {
 
 <style scoped>
 
+input[type=range] {
+  cursor: pointer;
+}
+
 input[type=radio] {
   display: none;
   opacity: 0.5;
@@ -327,31 +338,45 @@ label > input[type="radio"]:hover+span {
 
 
 #time-slider {
-  width: calc(100vw - 40px);
+  width: calc(100vw);
   height: auto;
   bottom: 30px;
   padding: 15px;
+  margin: 0 -20px -20px -20px;
+  border-radius: 0;
 }
 #time-slider input[type=range] {
   width: 100%;
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid #c4c4c4;
+  border: 1px solid #e2e2e2;
   border-radius: 50px;
-  height: 12px;
+  height: 10px;
   vertical-align: middle;
-  background-color: #e5e5e5;
+  background: rgb(210 210 210 / 25%);
+  margin: 0;
+}
+#time-slider div.bar-wrap {
+  border-radius: 50px;
+  overflow: hidden;
+  margin: -10px 2px 0;
+}
+
+#time-slider div.bar-wrap > div.bar {
+  height: 10px;
+  background-color: #007fff;
+  border-radius: 50px 0 0 50px;
 }
 
 #time-slider input[type=range]::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid #7c7c7c;
+  border: 4px solid #007fff;
   border-radius: 50%;
   width: 16px; height: 16px;
   transform: translate(0, -6px);
   vertical-align: middle;
-  background: #b6b6b6;
+  background: #ffffff;
 }
 #time-slider input[type=range]::-ms-track {
   background: transparent;
@@ -380,6 +405,11 @@ datalist#tick-marks > option:last-child {
 #speed-controller {
   height: auto;
   display: inline-block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin-bottom: 0;
+  z-index: 15;
 }
 
 #time-controller {
@@ -388,9 +418,9 @@ datalist#tick-marks > option:last-child {
   text-align: center;
 }
 #time-controller button {
-  width: 36px;
-  height: 36px;
-  padding: 0;
+  width: 32px;
+  height: 32px;
+  padding: 2px;
 }
 #time-controller button > img {
   width: 100%;
@@ -400,11 +430,11 @@ datalist#tick-marks > option:last-child {
 
 #time-info {
   position: absolute;
-  left: 15px;
-  bottom: 15px;
+  left: 0px;
+  bottom: 0px;
   border-radius: 8px;
-  background-color: var(--base-color-dark);
-  padding: 8px 20px;
+  background-color: #f2f2f2;
+  padding: 6px 20px;
   font-size: 11px;
   color: #777777;
   font-family: monospace;

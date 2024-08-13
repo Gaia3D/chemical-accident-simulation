@@ -7,6 +7,7 @@ import MapController from "./MapController.vue";
 import TimeSlider from "./TimeSlider.vue";
 import SimulationController from "./SimulationController.vue";
 import ChartLayer from "./ChartLayer.vue";
+import { store } from "../store/store";
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -42,11 +43,6 @@ const options = ref({
   shouldAnimate: true,
 });
 
-const layerState = ref({
-  chronic : false,
-  acuteHarm : false
-});
-
 const paddedDate = (date: Date) => {
   let dd = String(date.getDate()).padStart(2, '0')
   let mm = String(date.getMonth() + 1).padStart(2, '0')
@@ -59,14 +55,6 @@ const paddedTime = (date: Date) => {
   let mm = String(date.getMinutes()).padStart(2, '0')
   let ss = String(date.getSeconds()).padStart(2, '0')
   return `${hh}:${mm}:${ss}`
-}
-
-const toggleChronic = () => {
-  layerState.value.chronic = !layerState.value.chronic;
-}
-
-const toggleAcuteHarm = () => {
-  layerState.value.acuteHarm = !layerState.value.acuteHarm;
 }
 
 onMounted(async () => {
@@ -102,83 +90,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="modal-dim" v-show="layerState.chronic || layerState.acuteHarm" ></div>
-  <div id="acute-harm" class="non-modal layer" v-show="layerState.acuteHarm">
-    <h1>
-      개인별 피해등급(급성위해도) 산정기준
-      <button class="close" @click="toggleAcuteHarm()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
-    </h1>
-    <div class="layer-contents">
-      <table>
-        <thead>
-        <tr>
-          <th>등급</th>
-          <th>피해정도</th>
-          <th>평가 기준치</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-          <td>고위험</td>
-          <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level3) 초과 <br/> (AEGL-3 10min : 200mg/m3)</td>
-        </tr>
-        <tr>
-          <td>중위험</td>
-          <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level2) 초과 <br/> (AEGL-2 10min : 110mg/m3)</td>
-        </tr>
-        <tr>
-          <td>저위험</td>
-          <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level1) 초과 <br/> (AEGL-1 10min : 73mg/m3)
-          </td>
-        </tr>
-        <tr>
-          <td>해당없음</td>
-          <td>피해 없음</td>
-          <td>급성 독성 참고치(Level1) 미만 <br/> (AEGL-1 10min : 73mg/m3)
-          </td>
-        </tr>
-        </tbody>
-      </table>
-
-    </div>
+  <div class="loading" v-show="store.isShowLoading">
+    <span>시뮬레이션 데이터 로드 중</span>
   </div>
-  <div id="determining-chronic-layer" class="non-modal layer"  v-show="layerState.chronic">
-    <h1>
-      개인별 만성피해 유무 산정기준
-      <button class="close" @click="toggleChronic()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
-    </h1>
-    <div class="layer-contents">
-      <table>
-        <thead>
-          <tr>
-            <th>구분</th>
-            <th>평가기준</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>호흡 발암</td>
-            <td rowspan="2">국립환경과학원 화학물질 위해성평가의 구체적 방법 등에 관한 규정, US EPA 에서는 만성위해도값이 10^-6 값 이하인 경우 위해도가 없다고 판단함
-            </td>
-          </tr>
-          <tr>
-            <td>섭취-토양 발암</td>
-          </tr>
-          <tr>
-            <td>호흡비발암</td>
-            <td rowspan="2">국립환경과학원 화학물질 위해성평가의 구체적 방법 등에 관한 규정, US EPA 에서는 만성위해도값이 1 미만인 경우 위해도가 없다고 판단함</td>
-          </tr>
-          <tr>
-            <td>섭취-토양 비발암</td>
-          </tr>
-        </tbody>
-      </table>
 
-    </div>
-  </div>
   <div class="float-layer left top horizontal">
     <div id="info" class="layer">
       <h2>충청남도 당진시 시곡동 77-5 | 페놀(3,600L) 누출</h2>
@@ -194,9 +109,8 @@ onMounted(async () => {
     <MapController :transferViewer="transferViewer" ref="mapController"/>
   </div>
   <div class="float-layer right bottom vertical">
-
   </div>
-  <div class="float-layer right bottom horizontal">
+  <div class="float-layer left bottom horizontal">
     <ChartLayer :transferViewer="transferViewer" ref="chartLayer"/>
     <TimeSlider :transfer-viewer="transferViewer" ref="timeSlider"/>
   </div>
@@ -204,12 +118,30 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+div.loading {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  background-color: #000000b5;
+}
+div.loading span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 20px;
+}
+
 div#info {
 
 }
 div#info h2 {
   font-size: 1.2em;
-
   margin: 5px;
   padding: 0;
 }
