@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET})
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/accident")

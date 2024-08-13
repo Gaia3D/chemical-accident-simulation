@@ -11,5 +11,5 @@ import java.util.List;
  */
 @Repository
 public interface PersonalLocationRepository {
-    List<PersonalLocationInfo> getByAccidentNoAndPersonalId(@Param("accidentNo") String accidentNo, @Param("personalId") String personalId);
+    List<PersonalLocationInfo> getByAccidentNoAndPersonalId(@Param("accidentCode") String accidentCode, @Param("personalId") String personalId);
 }

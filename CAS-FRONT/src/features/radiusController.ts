@@ -5,20 +5,6 @@ let radiusEntities : any ;
 const innerFactor = 0.3;
 const outerFactor = 0.5;
 
-const computeCircle = (radius: number) => {
-    const positions = [];
-    for (let i = 0; i < 360; i++) {
-        const radians = Cesium.Math.toRadians(i);
-        positions.push(
-            new Cesium.Cartesian2(
-                radius * Math.cos(radians),
-                radius * Math.sin(radians)
-            )
-        );
-    }
-    return positions;
-}
-
 export const toggleRadius = async (viewer : any) => {
     if (radiusEntities) {
         radiusEntities.center.show = !radiusEntities.center.show;

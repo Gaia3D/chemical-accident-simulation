@@ -16,7 +16,7 @@ const Mago3D = window.Mago3D;
 const layerState = ref({
   chronicInfo : false,
   acuteHarmInfo : false,
-  isCas: true,
+  isCas: false,
   isDosage: false,
 });
 
@@ -28,15 +28,59 @@ const toggleAcuteHarm = () => {
   layerState.value.acuteHarmInfo = !layerState.value.acuteHarmInfo;
 }
 
-
-const props = defineProps<{
+/*const props = defineProps<{
   transferViewer: any;
-}>();
+}>();*/
+
+const accidentInfo = ref({
+  accidentId: 'CA201905001',
+  personalId: 'USER064'
+});
 
 onMounted(async () => {
   console.log('[MainComponent] Mounted Chart Layer Component');
-  store.showChartWindow();
+  //store.showChartWindow();
+  loadPersonalData();
+
+  window.addEventListener('message', (event) => {
+    console.log(event);
+    console.log("Message Received")
+    const data = event.data;
+    if (data) {
+      if (data.action === "showChart") {
+        store.showChartWindow();
+      }  else {
+        console.log("Unknown Action");
+      }
+    }
+  });
 });
+
+const personalData = ref({
+  json : undefined
+});
+
+const loadPersonalData = () => {
+  const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentInfo.value.accidentId}/personal/${accidentInfo.value.personalId}`;
+  fetch(url, {
+    method:'GET',
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  }).then((response) => {
+    return response.json()
+  }).then((json) => {
+    //console.log(json)
+    personalData.value.json = json;
+
+    lineChart.value.updateData(json);
+    dosageLineChart.value.updateData(json);
+
+    layerState.value.isCas = true;
+  }).catch((error) => {
+    console.error(error);
+  })
+}
 
 const selectCas = () => {
   layerState.value.isCas = true;
@@ -52,9 +96,9 @@ const toggleLayer = () => {
   store.toggleChartWindow();
 }
 
-const getViewer = () => {
+/*const getViewer = () => {
   return props.transferViewer.viewer;
-}
+}*/
 
 </script>
 
@@ -134,17 +178,17 @@ const getViewer = () => {
       </table>
     </div>
   </div>
-  <div id="chart-layer" class="layer left top">
+  <div id="chart-layer" class="layer left top" v-show="store.isShowChartWindow">
     <h1>
       개인별 상세 피해규모 예측 차트
       <button class="close" @click="toggleLayer()">
         <img class="icon" src="/src/assets/images/icons/minus.png">
       </button>
     </h1>
-    <div class="layer-contents" v-show="store.isShowChartWindow">
+    <div class="layer-contents">
       <div class="chart-info">
         <div>
-          예상 피해자 ID : <span>USER099</span>
+          예상 피해자 ID : <span>{{ accidentInfo.personalId }}</span>
         </div>
         <div class="vertical-line"></div>
         <div>
@@ -186,10 +230,10 @@ const getViewer = () => {
       </div>
       <div class="layer-body">
         <div class="layer-wrap" v-show="layerState.isCas">
-          <CasLineChart ref="lineChart"/>
+          <CasLineChart ref="lineChart" :personalData="personalData"/>
         </div>
         <div class="layer-wrap" v-show="layerState.isDosage">
-          <DosageLineChart ref="dosageLineChart"/>
+          <DosageLineChart ref="dosageLineChart" :personalData="personalData"/>
         </div>
       </div>
     </div>

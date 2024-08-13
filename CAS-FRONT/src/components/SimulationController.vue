@@ -19,7 +19,7 @@ onMounted(async () => {
   console.log('[SimulationController] Mounted Slider Component');
   setTimeout(() => {
     toggleRadius(getViewer());
-    //loadSimulations();
+    loadSimulations();
 
 
     /*const lonlat = {
@@ -40,7 +40,15 @@ const trackEntities : any[] = [];
 
 const layerState = ref({
   layer: true,
-  legend: true
+  legend: true,
+  chemicalAccident3d: false,
+  chemicalAccident2d: false,
+  accidentAcuteHazard: false,
+  victimDistribution: false,
+  victimMovement: false,
+  personalMovement: false,
+  selectedAccident: undefined,
+  selectedVictim: undefined,
 })
 
 const toggleLayer = () => {
@@ -82,7 +90,7 @@ const loadItinerary = () => {
       filePath: filePath,
       lineThickness: thickness,
       thickLineColor: {
-        r: 0.3, g: 0.3, b: 0.3, a: 0.5
+        r: 0.5, g: 0.5, b: 0.5, a: 0.5
       },
       animatedIconFilePath : imagePath,
     };
@@ -127,7 +135,17 @@ const loadItinerary = () => {
         polyline: {
           positions: polylinePositions,
           width: 1,
-          material: Cesium.Color.LIGHTGREY,
+          /*material: Cesium.Color.fromCssColorString("#555555"),*/
+
+          material: new Cesium.PolylineDashMaterialProperty({
+            color: Cesium.Color.GREY,
+            dashLength: 8,
+          }),
+          /*material: new Cesium.PolylineOutlineMaterialProperty({
+            color: Cesium.Color.fromCssColorString("#aaaaaa"),
+            outlineColor: Cesium.Color.fromCssColorString("#555555"),
+            outlineWidth: 2.0
+          }),*/
           clampToGround : true,
         },
         show: false
@@ -145,6 +163,7 @@ const loadSimulations = () => {
   getAnimationTimeController();
   load3dSimulation();
   load2dSimulation();
+  //load2dAcuteCriticality();
   loadItinerary();
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
@@ -190,11 +209,10 @@ const load3dSimulation = () => {
   }
 }
 
-
 const load2dSimulation = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  const path = "/data/chemicalAccident/output_chemicalAccident_2d";
+  const path = "/data/chemicalAccident/output_chemAcc2D_20240805";
   const jsonPath = path + "/JsonIndex2D.json";
   if (!magoManager.chemicalAccident2dManager) {
     let options = {
@@ -209,10 +227,33 @@ const load2dSimulation = () => {
     magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
     magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
 
-    magoManager.chemicalAccident2dManager.setLegendColors(getLegendColors());
+    magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
     magoManager.chemicalAccident2dManager.hide();
   }
 }
+
+/*const load2dAcuteCriticality = () => {
+  const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  const path = "/data/chemicalAccident/output_chemAcc2D_Acute_Criticality";
+  const jsonPath = path + "/JsonIndex2D.json";
+  if (!magoManager.chemicalAccident2dManager) {
+    let options = {
+      magoManager : magoManager,
+      url : jsonPath,
+      renderingColorType : 2,
+      renderBorder : true,
+      textureFilterType : 1, // 0 = NEAREST, 1 = LINEAR
+      //geoJsonIndexFileFolderPath : path,
+      //geoJsonIndexFilePath : jsonPath,
+    };
+    magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
+    magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
+
+    magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
+    magoManager.chemicalAccident2dManager.hide();
+  }
+}*/
 
 const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : number, accentuationFactor : number) => {
   const logMin = Math.log(minValue + 1); // Evitar log(0)
@@ -234,7 +275,7 @@ const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : 
 const get3DLegendColors = () => {
   const legendValuesScale = 1e10;
   const minValue = 1e-17 * legendValuesScale;
-  const maxValue = 0.648 * legendValuesScale;
+  const maxValue = 1620000 * legendValuesScale;
   const numColors = 12;
   const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
@@ -270,10 +311,10 @@ const get3DLegendColors = () => {
   return legendColors;
 }
 
-const getLegendColors = () => {
+const get2DLegendColors = () => {
   const legendValuesScale = 1e10;
   const minValue = 1e-17 * legendValuesScale;
-  const maxValue = 0.648 * legendValuesScale;
+  const maxValue = 17100.0 * legendValuesScale;
   const numColors = 12;
   const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
@@ -309,10 +350,10 @@ const getLegendColors = () => {
   return legendColors;
 }
 
-const getLegendColorsB = () => {
+const getAcuteCriticalityLegendColors = () => {
   const legendValuesScale = 1e10;
   const minValue = 1e-17 * legendValuesScale;
-  const maxValue = 0.648 * legendValuesScale;
+  const maxValue = 1620000.0 * legendValuesScale;
   const numColors = 10;
   const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
@@ -380,11 +421,18 @@ const getLegendColorsC = () => {
   return legendColors;
 }
 
-const startChemicalAccidentConcentration = () => {
+const startChemicalAccident3d = () => {
+  if (layerState.value.chemicalAccident3d) {
+    stopAllChemicalAccident();
+    layerState.value.selectedAccident = undefined;
+    return;
+  }
+  stopAllChemicalAccident();
+  layerState.value.chemicalAccident3d = true;
+
   // 농도
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  stopAllChemicalAccident();
   if (magoManager.chemicalAccidentManager) {
     magoManager.chemicalAccidentManager.show();
     magoManager.chemicalAccidentManager.setLegendValuesScale(1e10);
@@ -398,30 +446,44 @@ const startChemicalAccidentConcentration = () => {
   }
 }
 
-const startChemicalAccidentExposure = () => {
+const startChemicalAccident2d = () => {
+  if (layerState.value.chemicalAccident2d) {
+    stopAllChemicalAccident();
+    layerState.value.selectedAccident = undefined;
+    return;
+  }
+  stopAllChemicalAccident();
+  layerState.value.chemicalAccident2d = true;
+
   // 노출량
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  stopAllChemicalAccident();
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.setLegendColors(getLegendColors());
+    magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
     magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
     magoManager.chemicalAccident2dManager.show();
 
     const firstLayer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
-    firstLayer.setLegendColors(getLegendColors());
+    firstLayer.setLegendColors(get2DLegendColors());
     firstLayer.setLegendValuesScale(1e10);
 
   }
 }
 
 const startChemicalAccidentAcuteHazard = () => {
+  if (layerState.value.accidentAcuteHazard) {
+    stopAllChemicalAccident();
+    layerState.value.selectedAccident = undefined;
+    return;
+  }
+  stopAllChemicalAccident();
+  layerState.value.accidentAcuteHazard = true;
+
   // 급성 위해도
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  stopAllChemicalAccident();
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.setLegendColors(getLegendColorsB());
+    magoManager.chemicalAccident2dManager.setLegendColors(getAcuteCriticalityLegendColors());
     magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
     magoManager.chemicalAccident2dManager.show();
   }
@@ -436,14 +498,24 @@ const stopAllChemicalAccident = () => {
   if (magoManager.chemicalAccidentManager) {
     magoManager.chemicalAccidentManager.hide();
   }
+  layerState.value.chemicalAccident3d = false;
+  layerState.value.chemicalAccident2d = false;
+  layerState.value.accidentAcuteHazard = false;
 }
 
 
 const startVictimDistribution = () => {
+  if (layerState.value.victimDistribution) {
+    stopAllVictim();
+    layerState.value.selectedVictim = undefined;
+    return;
+  }
+  stopAllVictim();
+  layerState.value.victimDistribution = true;
+
   // 피해자 분포
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  stopAllVictim();
   if (magoManager.chemicalAccident2dManager) {
     magoManager.chemicalAccident2dManager.show();
     magoManager.chemicalAccident2dManager.setLegendColors(getLegendColorsC());
@@ -452,10 +524,16 @@ const startVictimDistribution = () => {
 }
 
 const startVictimMovement = () => {
+  if (layerState.value.victimMovement) {
+    stopAllVictim();
+    layerState.value.selectedVictim = undefined;
+    return;
+  }
+  stopAllVictim();
+  layerState.value.victimMovement = true;
   // 피해자 이동
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  stopAllVictim();
   if (magoManager.itineraryManager) {
     magoManager.itineraryManager.show();
     trackEntities.forEach((entity) => {
@@ -463,6 +541,17 @@ const startVictimMovement = () => {
     });
   }
 }
+
+const personalMovement = () => {
+  if (layerState.value.personalMovement) {
+    stopAllVictim();
+    layerState.value.selectedVictim = undefined;
+    return;
+  }
+  layerState.value.personalMovement = true;
+  store.toggleChartWindow();
+}
+
 
 const stopAllVictim = () => {
   const magoInstance = props.transferViewer.magoInstance;
@@ -473,6 +562,10 @@ const stopAllVictim = () => {
       entity.show = false;
     });
   }
+  store.hideChartWindow();
+  layerState.value.victimDistribution = false;
+  layerState.value.victimMovement = false;
+  layerState.value.personalMovement = false;
   /*if (magoManager.chemicalAccident2dManager) {
     magoManager.chemicalAccident2dManager.hide();
   }*/
@@ -515,14 +608,14 @@ const getViewer = () => {
       <div class="switch-wrapper">
         <h4>사고물질 농도 (3D)</h4>
         <label>
-          <input type="radio" name="accident-group" @change="startChemicalAccidentConcentration()">
+          <input type="radio" name="accident-group" v-model="layerState.selectedAccident" value="chemicalAccident3d" @click="startChemicalAccident3d()">
           <span></span>
         </label>
       </div>
       <div class="switch-wrapper">
-        <h4>사고물질 농도 (지면)</h4>
+        <h4>사고물질 농도 (2D)</h4>
         <label>
-          <input type="radio" name="accident-group" @change="startChemicalAccidentExposure()">
+          <input type="radio" name="accident-group" v-model="layerState.selectedAccident" value="chemicalAccident2d" @click="startChemicalAccident2d()">
           <span></span>
         </label>
       </div>
@@ -530,7 +623,7 @@ const getViewer = () => {
         <h4>사고물질 급성위해도</h4>
         <h4>(위치정보 미확인 피해등급)</h4>
         <label>
-          <input type="radio" name="accident-group" @change="startChemicalAccidentAcuteHazard()">
+          <input type="radio" name="accident-group" v-model="layerState.selectedAccident" value="chemicalAccidentAcuteHazard" @click="startChemicalAccidentAcuteHazard()">
           <span></span>
         </label>
       </div>
@@ -539,21 +632,21 @@ const getViewer = () => {
       <div class="switch-wrapper">
         <h4>예상 피해자 분포</h4>
         <label>
-          <input type="radio" name="victim-group" @change="startVictimDistribution()">
+          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="victimDistribution" @click="startVictimDistribution()">
           <span></span>
         </label>
       </div>
       <div class="switch-wrapper">
         <h4>예상 피해자 이동동선</h4>
         <label>
-          <input type="radio" name="victim-group" @change="startVictimMovement()">
+          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="victimMovement" @click="startVictimMovement()">
           <span></span>
         </label>
       </div>
       <div class="switch-wrapper">
         <h4>개인별 상세 동선</h4>
         <label>
-          <input type="radio" name="victim-group" @change="startVictimMovement()">
+          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="personalMovement"  @click="personalMovement()">
           <span></span>
         </label>
       </div>
@@ -574,7 +667,7 @@ const getViewer = () => {
         </label>
       </div>
       <div class="switch-wrapper">
-        <h4>반경 레이어(동심원)</h4>
+        <h4>동심원 보기</h4>
         <label>
           <input type="checkbox" name="victim-group" @change="toggleRadius(getViewer())" checked>
           <span></span>

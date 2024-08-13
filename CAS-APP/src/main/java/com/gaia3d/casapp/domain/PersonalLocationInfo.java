@@ -25,6 +25,9 @@ public class PersonalLocationInfo {
         age
         concentration
         exposure
+        exposure_resp_carc
+        exposure_soil_ingest_carc
+        exposure_soil_ingest_noncarc
         aegl1_eval
         aegl2_eval
         aegl3_eval
@@ -39,9 +42,13 @@ public class PersonalLocationInfo {
     private int gridId; // 격자ID
     private String gender; // 성별
     private String age; // 연령
-    private double concentration; // 사고물질 농도
-    private double exposure; // 노출량
-    private double aegl1Eval; // AEGL-1 평가결과
-    private double aegl2Eval; // AEGL-2 평가결과
-    private double aegl3Eval; // AEGL-3 평가결과
+    private String concentration; // 사고물질 농도
+    private String aegl1Eval; // AEGL-1 평가결과
+    private String aegl2Eval; // AEGL-2 평가결과
+    private String aegl3Eval; // AEGL-3 평가결과
+
+    private String exposureRespCarc; // 노출량(호흡) - 발암성
+    private String exposure; // 노출량(호흡) - 비 발암성
+    private String exposureSoilIngestCarc; // 노출량(토양섭취) - 발암성
+    private String exposureSoilIngestNoncarc; // 노출량(토양섭취) - 비 발암성
 }

@@ -136,11 +136,14 @@ div.modal-dim {
   background: none;
   border: none;
   cursor: pointer;
-  position: absolute;
-  right: 14px;
+  /* position: absolute; */
+  /* right: 14px; */
+  top: -3px;
   padding: 0;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  position: relative;
 }
 .layer > h1 button img {
   width: 100%;

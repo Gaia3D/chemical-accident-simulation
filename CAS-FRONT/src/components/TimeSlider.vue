@@ -31,7 +31,7 @@ const timeTable = ref<any>({
   timeScale : 600000,
   nowUnixTimeMilisec : 0,
   minUnixTimeMilisec : 0,
-  maxUnixTimeMilisec : 86400000,
+  maxUnixTimeMilisec : 172800000,
   startUnixTimeMilisec : 0,
   isPlaying : false
 });
@@ -113,7 +113,7 @@ const play = () => {
     }
     setTime(false);
 
-    if (timeTable.value.nowUnixTimeMilisec > 86400000) {
+    if (timeTable.value.nowUnixTimeMilisec > timeTable.value.maxUnixTimeMilisec) {
       clearInterval(playIntervalEvent);
       playIntervalEvent = undefined;
       timeTable.value.isPlaying = false;
@@ -162,13 +162,13 @@ const setTime = (snap = false) => {
     }
   }
 
-  percentage.value.width = `${(parseInt(timeTable.value.nowUnixTimeMilisec) / 86400000) * 100}%`;
+  percentage.value.width = `${(parseInt(timeTable.value.nowUnixTimeMilisec) / timeTable.value.maxUnixTimeMilisec) * 100}%`;
 
   const startMilisec = animationTimeController._animationStartUnixTimeMilisec;
   animationTimeController._currentUnixTimeMilisec = startMilisec + parseInt(timeTable.value.nowUnixTimeMilisec);
   let startDateTime = new Date(startMilisec);
   let currentDateTime = new Date(animationTimeController._currentUnixTimeMilisec);
-  let endDateTime = new Date(startMilisec + 86400000);
+  let endDateTime = new Date(startMilisec + timeTable.value.maxUnixTimeMilisec);
 
   const timeInfo = toTimeFormat(currentDateTime);
   const endTimeInfo = toTimeFormat(endDateTime);
@@ -199,8 +199,7 @@ const paddingZero = (num: number) => {
 
 onMounted(async () => {
   console.log('[MainComponent] Mounted Slider Component');
-
-  window.addEventListener('message', (event) => {
+  /*window.addEventListener('message', (event) => {
     console.log(event);
     console.log("Message Received")
 
@@ -212,7 +211,7 @@ onMounted(async () => {
         stop();
       }
     }
-  });
+  });*/
 });
 
 const getViewer = () => {
@@ -247,9 +246,9 @@ const getViewer = () => {
     </div>
   </div>
   <div id="time-slider" class="layer">
-    <input type="range" step="60000" min="0" max="86400000" value="1000" v-model="timeTable.nowUnixTimeMilisec" id="myRange" list="tick-marks" @change="setTime(true)" @input="setTime(true)">
+    <input type="range" step="60000" min="0" max="172800000" value="1000" v-model="timeTable.nowUnixTimeMilisec" id="myRange" list="tick-marks" @change="setTime(true)" @input="setTime(true)">
     <div class="bar-wrap">
-      <div class="bar" :style="percentage" style></div>
+      <div class="bar" :style="percentage"></div>
     </div>
     <datalist id="tick-marks">
       <option value="0"        label="00H"></option>
@@ -277,6 +276,30 @@ const getViewer = () => {
       <option value="79200000" label="22H"></option>
       <option value="82800000" label="23H"></option>
       <option value="86400000" label="24H"></option>
+      <option value="90000000" label="25H"></option>
+      <option value="93600000" label="26H"></option>
+      <option value="97200000" label="27H"></option>
+      <option value="100800000" label="28H"></option>
+      <option value="104400000" label="29H"></option>
+      <option value="108000000" label="30H"></option>
+      <option value="111600000" label="31H"></option>
+      <option value="115200000" label="32H"></option>
+      <option value="118800000" label="33H"></option>
+      <option value="122400000" label="34H"></option>
+      <option value="126000000" label="35H"></option>
+      <option value="129600000" label="36H"></option>
+      <option value="133200000" label="37H"></option>
+      <option value="136800000" label="38H"></option>
+      <option value="140400000" label="39H"></option>
+      <option value="144000000" label="40H"></option>
+      <option value="147600000" label="41H"></option>
+      <option value="151200000" label="42H"></option>
+      <option value="154800000" label="43H"></option>
+      <option value="158400000" label="44H"></option>
+      <option value="162000000" label="45H"></option>
+      <option value="165600000" label="46H"></option>
+      <option value="169200000" label="47H"></option>
+      <option value="172800000" label="48H"></option>
     </datalist>
     <div id="time-controller" class="vertical center">
       <button @click="prev">
@@ -399,7 +422,7 @@ datalist#tick-marks > option {
 datalist#tick-marks > option:last-child {
   position: absolute;
   right: 0;
-  transform: translate(-50%, 0);
+  transform: translate(35%, 0);
 }
 
 #speed-controller {

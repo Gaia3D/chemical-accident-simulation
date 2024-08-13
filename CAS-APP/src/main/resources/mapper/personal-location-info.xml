@@ -2,11 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gaia3d.casapp.repository.PersonalLocationRepository">
 
-    <select id="getGrid" resultType="PersonalLocationInfo">
+    <select id="getByAccidentNoAndPersonalId" resultType="PersonalLocationInfo">
         select
             pli.*
         from personal_loc_info pli
-        where pli.accident_no = #{accidentNo}
+        where pli.accident_no = #{accidentCode}
         and pli.personal_id = #{personalId}
     </select>
 
