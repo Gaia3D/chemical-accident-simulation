@@ -114,13 +114,37 @@ export default {
     }
   },
   methods: {
+    initChartData() {
+      this.chartData = {
+        labels: [],
+        datasets: [
+          {
+            label: "호흡 발암 노출량",
+            data: [],
+          },
+          {
+            label: "호흡 비발암 노출량",
+            data: [],
+          },
+          {
+            label: "섭취/토양 발암 노출량",
+            data: [],
+          },
+          {
+            label: "섭취/토양 비발암 노출량",
+            data: [],
+          },
+        ],
+      };
+    },
     updateData() {
       if (this.personalData.json) {
-        this.chartData.labels.length = [];
+        this.initChartData();
+        /*this.chartData.labels.length = [];
         this.chartData.datasets[0].data.length = [];
         this.chartData.datasets[1].data.length = [];
         this.chartData.datasets[2].data.length = [];
-        this.chartData.datasets[3].data.length = [];
+        this.chartData.datasets[3].data.length = [];*/
 
         let json = this.personalData.json;
         let length = json.length;

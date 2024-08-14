@@ -163,9 +163,24 @@ export default {
     }
   },
   methods: {
+    initChartData() {
+      //this.chartData = data;
+      this.chartData = {
+        labels: [],
+        datasets: [
+          {
+            label: "사고물질 농도",
+            data: [],
+          },
+        ],
+      };
+    },
+    initOptionsData() {
+      this.chartOptions = options;
+    },
     updateData() {
       if (this.personalData.json) {
-        console.log(this.personalData.json);
+        this.initChartData();
 
         this.chartData.labels.length = [];
         this.chartData.datasets[0].data.length = [];

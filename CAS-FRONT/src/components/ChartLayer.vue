@@ -41,24 +41,43 @@ onMounted(async () => {
   console.log('[MainComponent] Mounted Chart Layer Component');
   //store.showChartWindow();
   loadPersonalData();
+  layerState.value.isCas = true;
 
-  window.addEventListener('message', (event) => {
-    console.log(event);
-    console.log("Message Received")
+  /*window.addEventListener('message', (event) => {
+    //console.log(event);
+    //console.log("Message Received")
     const data = event.data;
     if (data) {
       if (data.action === "showChart") {
         store.showChartWindow();
+      } else if (data.action === "hideChart") {
+        store.hideChartWindow();
+      } else if (data.action === "load") {
+        if (data.detail) {
+          accidentInfo.value.accidentId = data.detail.accidentId;
+          accidentInfo.value.personalId = data.detail.userId;
+          loadPersonalData();
+          store.showChartWindow();
+        } else {
+          console.error("[ERROR] No Detail Data");
+        }
       }  else {
-        console.log("Unknown Action");
+        console.error("[ERROR] Unknown Action");
       }
+    } else {
+      console.error("[ERROR] No Data");
     }
-  });
+  });*/
 });
 
 const personalData = ref({
   json : undefined
 });
+
+const setAccidentInfo = (accidentId : string, personalId : string) => {
+  accidentInfo.value.accidentId = accidentId;
+  accidentInfo.value.personalId = personalId;
+}
 
 const loadPersonalData = () => {
   const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentInfo.value.accidentId}/personal/${accidentInfo.value.personalId}`;
@@ -70,13 +89,14 @@ const loadPersonalData = () => {
   }).then((response) => {
     return response.json()
   }).then((json) => {
-    //console.log(json)
-    personalData.value.json = json;
+    if (!json || json.length === 0) {
+      console.error("[ERROR] No Data");
+      return;
+    }
 
+    personalData.value.json = json;
     lineChart.value.updateData(json);
     dosageLineChart.value.updateData(json);
-
-    layerState.value.isCas = true;
   }).catch((error) => {
     console.error(error);
   })
@@ -95,6 +115,11 @@ const selectDosage = () => {
 const toggleLayer = () => {
   store.toggleChartWindow();
 }
+
+defineExpose({
+  setAccidentInfo,
+  loadPersonalData
+});
 
 /*const getViewer = () => {
   return props.transferViewer.viewer;

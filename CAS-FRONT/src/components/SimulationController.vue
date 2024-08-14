@@ -212,24 +212,58 @@ const load3dSimulation = () => {
 const load2dSimulation = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  const path = "/data/chemicalAccident/output_chemAcc2D_20240805";
-  const jsonPath = path + "/JsonIndex2D.json";
-  if (!magoManager.chemicalAccident2dManager) {
-    let options = {
-      magoManager : magoManager,
-      url : jsonPath,
-      renderingColorType : 2,
-      renderBorder : true,
-      textureFilterType : 1, // 0 = NEAREST, 1 = LINEAR
-      //geoJsonIndexFileFolderPath : path,
-      //geoJsonIndexFilePath : jsonPath,
-    };
-    magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
-    magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
 
-    magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
-    magoManager.chemicalAccident2dManager.hide();
+  let managerOptions = {
+    magoManager : magoManager,
   }
+  magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(managerOptions);
+  magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
+
+
+  let optionsA = {
+    url : "/data/chemicalAccident/output_chemAcc2D_20240805/JsonIndex2D.json",
+    renderingColorType : 2,  // 0= rainbow, 1= monotone, 2= legendColors.***
+    renderBorder : true, // true, false.***
+    textureFilterType : 0,  // 0= nearest, 1= linear.***
+    interpolationBetweenSlices : 0  // 0= nearest, 1= linear.***
+  };
+  let accidentLayerA = new Mago3D.ChemicalAccident2DLayer(optionsA);
+  accidentLayerA.setLegendColors(get2DLegendColors());
+  accidentLayerA.hide();
+
+  magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerA);
+
+  let optionsB = {
+    url : "/data/chemicalAccident/output_chemAcc2D_Acute_Criticality/JsonIndex2D.json",
+    renderingColorType : 2,  // 0= rainbow, 1= monotone, 2= legendColors.***
+    renderBorder : true, // true, false.***
+    textureFilterType : 0,  // 0= nearest, 1= linear.***
+    interpolationBetweenSlices : 0  // 0= nearest, 1= linear.***
+  };
+  let accidentLayerB = new Mago3D.ChemicalAccident2DLayer(optionsB);
+  accidentLayerB.setLegendColors(getAcuteCriticalityLegendColors());
+  accidentLayerB.hide();
+
+  magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerB);
+
+  let optionsC = {
+    url : "/data/chemicalAccident/output_chemAcc2D_victim_distribution/JsonIndex2D.json",
+    renderingColorType : 2,  // 0= rainbow, 1= monotone, 2= legendColors.***
+    renderBorder : true, // true, false.***
+    textureFilterType : 0,  // 0= nearest, 1= linear.***
+    interpolationBetweenSlices : 0  // 0= nearest, 1= linear.***
+  };
+  let accidentLayerC = new Mago3D.ChemicalAccident2DLayer(optionsC);
+  accidentLayerC.setLegendColors(getVictimDistributionLegendColors());
+  accidentLayerC.hide();
+
+  magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerC);
+
+    //magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
+    //magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
+    //magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
+    //magoManager.chemicalAccident2dManager.hide();
+
 }
 
 /*const load2dAcuteCriticality = () => {
@@ -274,12 +308,12 @@ const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : 
 
 const get3DLegendColors = () => {
   const legendValuesScale = 1e10;
-  const minValue = 1e-17 * legendValuesScale;
-  const maxValue = 1620000 * legendValuesScale;
+  const minValue = 0;
+  const maxValue = 112000000 * legendValuesScale;
   const numColors = 12;
   const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-  const accentuationFactorAlpha = 2.5;
+  const accentuationFactorAlpha = 3.5;
   const alphaValues = getLogDivisions(0.0, 0.99, numColors, accentuationFactorAlpha);
 
   const legendColors = [];
@@ -313,16 +347,16 @@ const get3DLegendColors = () => {
 
 const get2DLegendColors = () => {
   const legendValuesScale = 1e10;
-  const minValue = 1e-17 * legendValuesScale;
+  const minValue = 0;
   const maxValue = 17100.0 * legendValuesScale;
   const numColors = 12;
-  const accentuationFactor = 1.0;
+  const accentuationFactor = 6.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
 
   // create legend colors.***
   const legendColors = [];
 
-  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 128/255, legendValues[0]);  // 0
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.0, legendValues[0]);  // 0
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, 128/255, legendValues[1]);  // 1
   legendColors.push(LegendColor);
@@ -352,17 +386,53 @@ const get2DLegendColors = () => {
 
 const getAcuteCriticalityLegendColors = () => {
   const legendValuesScale = 1e10;
-  const minValue = 1e-17 * legendValuesScale;
+  const minValue = 0;
   const maxValue = 1620000.0 * legendValuesScale;
   const numColors = 10;
-  const accentuationFactor = 1.0;
+  const accentuationFactor = 3.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
 
   // create legend colors.***
   const legendColors = [];
 
   //let alpha = 128/255;
-  let LegendColor = new Mago3D.ColorLegend(128/255, 128/255, 128/255, 0.1, legendValues[0]);  // 0
+  let LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.0, legendValues[0]);  // 0
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.1, legendValues[1]);  // 1
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.2, legendValues[2]);  // 2
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.3, legendValues[3]);  // 3
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.4, legendValues[4]);  // 4
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.5, legendValues[5]);  // 5
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.6, legendValues[6]);  // 6
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.7, legendValues[7]);  // 7
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.8, legendValues[8]);  // 8
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.9, legendValues[9]);  // 9
+  legendColors.push(LegendColor);
+
+  return legendColors;
+}
+
+const getVictimDistributionLegendColors = () => {
+  const legendValuesScale = 1e10;
+  const minValue = 0;
+  const maxValue = 1620000.0 * legendValuesScale;
+  const numColors = 10;
+  const accentuationFactor = 3.0;
+  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
+
+  // create legend colors.***
+  const legendColors = [];
+
+  //let alpha = 128/255;
+  let LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.0, legendValues[0]);  // 0
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.1, legendValues[1]);  // 1
   legendColors.push(LegendColor);
@@ -381,42 +451,6 @@ const getAcuteCriticalityLegendColors = () => {
   LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.8, legendValues[8]);  // 8
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.9, legendValues[9]);  // 9
-  legendColors.push(LegendColor);
-
-  return legendColors;
-}
-
-const getLegendColorsC = () => {
-  const legendValuesScale = 1e10;
-  const minValue = 1e-17 * legendValuesScale;
-  const maxValue = 0.648 * legendValuesScale;
-  const numColors = 10;
-  const accentuationFactor = 1.0;
-  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-
-  // create legend colors.***
-  const legendColors = [];
-
-  //let alpha = 128/255;
-  let LegendColor = new Mago3D.ColorLegend(128/255, 128/255, 128/255, 0.1, legendValues[0]);  // 0
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.1, legendValues[1]);  // 1
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.2, legendValues[2]);  // 2
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.3, legendValues[3]);  // 3
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.4, legendValues[4]);  // 4
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.5, legendValues[5]);  // 5
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.6, legendValues[6]);  // 6
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.7, legendValues[7]);  // 7
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.8, legendValues[8]);  // 8
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 0.9, legendValues[9]);  // 9
   legendColors.push(LegendColor);
   return legendColors;
 }
@@ -459,13 +493,15 @@ const startChemicalAccident2d = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
-    magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
-    magoManager.chemicalAccident2dManager.show();
+    //magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
+    //magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
+    //magoManager.chemicalAccident2dManager.show();
 
-    const firstLayer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
-    firstLayer.setLegendColors(get2DLegendColors());
-    firstLayer.setLegendValuesScale(1e10);
+    const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
+    layer.show();
+    //firstLayer.setLegendColors(get2DLegendColors());
+    //firstLayer.setLegendValuesScale(1e10);
+    //layer.show();
 
   }
 }
@@ -483,9 +519,8 @@ const startChemicalAccidentAcuteHazard = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.setLegendColors(getAcuteCriticalityLegendColors());
-    magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
-    magoManager.chemicalAccident2dManager.show();
+    const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(1)
+    layer.show();
   }
 }
 
@@ -493,7 +528,10 @@ const stopAllChemicalAccident = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.hide();
+    //magoManager.chemicalAccident2dManager.hide();
+    magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0).hide();
+    magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(1).hide()
+    //magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2).hide();
   }
   if (magoManager.chemicalAccidentManager) {
     magoManager.chemicalAccidentManager.hide();
@@ -517,9 +555,15 @@ const startVictimDistribution = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.show();
-    magoManager.chemicalAccident2dManager.setLegendColors(getLegendColorsC());
-    magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
+    //magoManager.chemicalAccident2dManager.show();
+    /*if (magoManager.chemicalAccident2dManager) {
+      magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2).show();
+    }*/
+
+    //magoManager.chemicalAccident2dManager.setLegendColors(getLegendColorsC());
+    //magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
+    const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2);
+    layer.show();
   }
 }
 
@@ -562,13 +606,14 @@ const stopAllVictim = () => {
       entity.show = false;
     });
   }
+
   store.hideChartWindow();
   layerState.value.victimDistribution = false;
   layerState.value.victimMovement = false;
   layerState.value.personalMovement = false;
-  /*if (magoManager.chemicalAccident2dManager) {
-    magoManager.chemicalAccident2dManager.hide();
-  }*/
+  if (magoManager.chemicalAccident2dManager) {
+    magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2).hide();
+  }
 }
 
 

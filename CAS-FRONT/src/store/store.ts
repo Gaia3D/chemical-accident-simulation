@@ -1,6 +1,10 @@
 import { reactive } from 'vue'
 
 export const store = reactive({
+    isReady: false,
+    startRender() {
+        this.isReady = true;
+    },
     isShowChartWindow: false,
     showChartWindow() {
         this.isShowChartWindow = true;

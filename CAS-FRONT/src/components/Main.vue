@@ -28,6 +28,7 @@ const transferViewer = ref({
 const mapComponent = ref();
 const mapSelector = ref();
 const mapController = ref();
+const chartLayer = ref();
 
 const viewer = ref();
 const magoInstance = ref();
@@ -57,6 +58,7 @@ const paddedTime = (date: Date) => {
   return `${hh}:${mm}:${ss}`
 }
 
+
 onMounted(async () => {
   console.log('[MainComponent] Mounted Main Component');
 
@@ -85,16 +87,55 @@ onMounted(async () => {
   const initPosition = transferViewer.value.initPosition;
   mapController.value.flyTo(initPosition.lon, initPosition.lat, initPosition.height, 0);
   mapSelector.value.toggleVWorldBaseLayer();
+
+  // esc key event
+  let debugCount = 1;
+  window.addEventListener('keydown', (event) => {
+    if (event.key === "Escape") {
+      console.log("[DEBUG] Pressed ESC Key", debugCount);
+      if (debugCount == 5) {
+        store.startRender();
+      } else {
+        debugCount++;
+      }
+    }
+  });
+
+  window.addEventListener('message', (event) => {
+    console.log("[Message Received]", event);
+    const data = event.data;
+    if (data) {
+      if (data.action === "startRender") {
+        store.startRender();
+      } else if (data.action === "showChart") {
+        store.showChartWindow();
+      } else if (data.action === "hideChart") {
+        store.hideChartWindow();
+      } else if (data.action === "loadChart") {
+        if (data.detail) {
+          chartLayer.value.setAccidentInfo(data.detail.accidentId, data.detail.userId);
+          chartLayer.value.loadPersonalData();
+          store.showChartWindow();
+        } else {
+          console.error("[ERROR] No Detail Data");
+        }
+      }  else {
+        console.error("[ERROR] Unknown Action");
+      }
+    } else {
+      console.error("[ERROR] No Data");
+    }
+  });
 });
 
 </script>
 
 <template>
-  <div class="loading" v-show="store.isShowLoading">
+  <div class="loading" v-show="store.isShowLoading" v-if="store.isReady">
     <span>시뮬레이션 데이터 로드 중</span>
   </div>
 
-  <div class="float-layer left top horizontal">
+  <div class="float-layer left top horizontal" v-if="store.isReady">
     <div id="info" class="layer">
       <h2>충청남도 당진시 시곡동 77-5 | 페놀(3,600L) 누출</h2>
       <h4>분석데이터 : 2024/02/06 11:00 기준 (2일 0시간 예측)</h4>
@@ -104,13 +145,13 @@ onMounted(async () => {
       <SimulationController :transfer-viewer="transferViewer" ref="simulationController"/>
     </div>
   </div>
-  <div class="float-layer right top horizontal">
+  <div class="float-layer right top horizontal" v-show="store.isReady">
     <MapSelector :transferViewer="transferViewer" ref="mapSelector"/>
     <MapController :transferViewer="transferViewer" ref="mapController"/>
   </div>
-  <div class="float-layer right bottom vertical">
+  <div class="float-layer right bottom vertical" v-if="store.isReady">
   </div>
-  <div class="float-layer left bottom horizontal">
+  <div class="float-layer left bottom horizontal" v-if="store.isReady">
     <ChartLayer ref="chartLayer"/>
     <TimeSlider :transfer-viewer="transferViewer" ref="timeSlider"/>
   </div>
