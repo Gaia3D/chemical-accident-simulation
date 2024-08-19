@@ -15,10 +15,11 @@ export const toggleRadius = async (viewer : any) => {
     }
 
     const range = 1000
+    const position = Cesium.Cartesian3.fromDegrees(126.68418943890646, 36.902156101663145);
 
     const center = viewer.entities.add({
         name: "Dome",
-        position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
+        position: position,
         ellipsoid: {
             radii: new Cesium.Cartesian3(1, 1, 1),
             maximumCone: Cesium.Math.PI_OVER_TWO,
@@ -43,6 +44,7 @@ export const toggleRadius = async (viewer : any) => {
             horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
             pixelOffset: new Cesium.Cartesian2(0, 20),
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         }
     });
 
@@ -57,7 +59,7 @@ export const toggleRadius = async (viewer : any) => {
 
     const near = viewer.entities.add({
         name: "Dome",
-        position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
+        position: position,
         /*ellipsoid: {
             radii: new Cesium.Cartesian3(range, range, 10),
             maximumCone: Cesium.Math.PI_OVER_TWO,
@@ -79,7 +81,7 @@ export const toggleRadius = async (viewer : any) => {
 
     const middle = viewer.entities.add({
         name: "Dome",
-        position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
+        position: position,
         /*ellipsoid: {
             radii: new Cesium.Cartesian3(range * 2, range * 2, 10),
             maximumCone: Cesium.Math.PI_OVER_TWO,
@@ -100,7 +102,7 @@ export const toggleRadius = async (viewer : any) => {
 
     const far = viewer.entities.add({
         name: "Dome",
-        position: Cesium.Cartesian3.fromDegrees(126.65403123232736, 36.90329299539047),
+        position: position,
         /*ellipsoid: {
             radii: new Cesium.Cartesian3(range * 3, range * 3, 10),
             maximumCone: Cesium.Math.PI_OVER_TWO,

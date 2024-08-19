@@ -20,25 +20,19 @@ onMounted(async () => {
   setTimeout(() => {
     toggleRadius(getViewer());
     loadSimulations();
-
-
-    /*const lonlat = {
-      lon: 126.65403123232736,
-      lat: 36.90329299539047
-    }
-    const viewer = getViewer();
-    viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(lonlat.lon, lonlat.lat),
-      model: {
-        uri: "/data/waves/ocean_wave_test.glb",
-      },
-    });*/
-  }, 2000);
+  }, 100);
 });
 
+const legendList : any = ref({
+  title : "농도 범례",
+  list : [],
+  cssLinearGradient : "linear-gradient(red, yellow, green)"
+})
+
+const singleTrackEntity : any = ref(undefined);
 const trackEntities : any[] = [];
 
-const layerState = ref({
+const layerState : any = ref({
   layer: true,
   legend: true,
   chemicalAccident3d: false,
@@ -99,17 +93,11 @@ const loadItinerary = () => {
       //console.log("response", response);
       return response.json()
     }).then((json) => {
-      //console.log("json", json);
-
       const centerGeographicCoord = json.centerGeographicCoord;
       const localPositions = json.localPositions;
 
       const worldCoord = Cesium.Cartesian3.fromDegrees(centerGeographicCoord.longitude, centerGeographicCoord.latitude, centerGeographicCoord.altitude);
-      //const cartographic = Cesium.Cartographic.fromCartesian(worldCoord);
       const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(worldCoord);
-
-      //console.log("worldCoord", worldCoord);
-      //console.log("cartographic", cartographic);
 
       const polylinePositions : any = [];
 
@@ -134,18 +122,12 @@ const loadItinerary = () => {
         name: "Blue dashed line",
         polyline: {
           positions: polylinePositions,
-          width: 1,
+          width: 2,
           /*material: Cesium.Color.fromCssColorString("#555555"),*/
-
           material: new Cesium.PolylineDashMaterialProperty({
             color: Cesium.Color.GREY,
             dashLength: 8,
           }),
-          /*material: new Cesium.PolylineOutlineMaterialProperty({
-            color: Cesium.Color.fromCssColorString("#aaaaaa"),
-            outlineColor: Cesium.Color.fromCssColorString("#555555"),
-            outlineWidth: 2.0
-          }),*/
           clampToGround : true,
         },
         show: false
@@ -159,11 +141,73 @@ const loadItinerary = () => {
   }
 }
 
+const loadPersonalItinerary = (userId : string, endShow: boolean) => {
+  const viewer = getViewer();
+  const itineraryPath = "/data/itinerary/";
+  let filePath = itineraryPath + userId + ".json";
+
+  console.log("filePath", filePath);
+
+  fetch(filePath, {method: "GET"}).then((response) => {
+    return response.json()
+  }).then((json) => {
+    const centerGeographicCoord = json.centerGeographicCoord;
+    const localPositions = json.localPositions;
+
+    const worldCoord = Cesium.Cartesian3.fromDegrees(centerGeographicCoord.longitude, centerGeographicCoord.latitude, centerGeographicCoord.altitude);
+    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(worldCoord);
+
+    const polylinePositions : any = [];
+
+    for (let index = 0; index < localPositions.length; index+=3) {
+      let x = localPositions[index];
+      let y = localPositions[index + 1];
+      //let z = localPositions[index + 2];
+      let z = 5;
+
+      const localCartesian = new Cesium.Cartesian3(x, y, z);
+
+      const translateMatrix = Cesium.Matrix4.fromTranslation(localCartesian, new Cesium.Matrix4());
+
+      const translatedMatrix = Cesium.Matrix4.multiply(modelMatrix, translateMatrix, new Cesium.Matrix4());
+      const worldPosition = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
+
+      polylinePositions.push(worldPosition);
+    }
+
+    const polylineEntitiy = viewer.entities.add({
+      name: "Blue dashed line",
+      polyline: {
+        positions: polylinePositions,
+        width: 2,
+        material: new Cesium.PolylineDashMaterialProperty({
+          color: Cesium.Color.GREY,
+          dashLength: 8,
+        }),
+        clampToGround : true,
+      },
+      show: false
+    });
+
+    if (singleTrackEntity.value) {
+      viewer.entities.remove(singleTrackEntity.value);
+    }
+    singleTrackEntity.value = polylineEntitiy
+
+    if (endShow) {
+      //polylineEntitiy.show = true;
+      startPersonalMovement();
+      store.showChartWindow();
+    }
+  });
+}
+
 const loadSimulations = () => {
   getAnimationTimeController();
   load3dSimulation();
   load2dSimulation();
   //load2dAcuteCriticality();
+  loadPersonalItinerary("USER001", false);
   loadItinerary();
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
@@ -197,13 +241,14 @@ const load3dSimulation = () => {
       magoManager : magoManager,
       renderingColorType : 2,
       url : jsonPath,
+      textureFlipYAxis : true
       //geoJsonIndexFileFolderPath : path
     };
     magoManager.chemicalAccidentManager = new Mago3D.ChemicalAccidentManager(options);
     magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
 
-    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors());
+    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e10));
     magoManager.chemicalAccidentManager.setLegendValuesScale(1e10);
     magoManager.chemicalAccidentManager.hide();
   }
@@ -225,20 +270,22 @@ const load2dSimulation = () => {
     renderingColorType : 2,  // 0= rainbow, 1= monotone, 2= legendColors.***
     renderBorder : true, // true, false.***
     textureFilterType : 0,  // 0= nearest, 1= linear.***
-    interpolationBetweenSlices : 0  // 0= nearest, 1= linear.***
+    interpolationBetweenSlices : 0,  // 0= nearest, 1= linear.***
+    textureFlipYAxis : true
   };
   let accidentLayerA = new Mago3D.ChemicalAccident2DLayer(optionsA);
-  accidentLayerA.setLegendColors(get2DLegendColors());
+  accidentLayerA.setLegendColors(get2DLegendColors(1e10));
   accidentLayerA.hide();
 
   magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerA);
 
   let optionsB = {
-    url : "/data/chemicalAccident/output_chemAcc2D_Acute_Criticality/JsonIndex2D.json",
+    url : "/data/chemicalAccident/output_chemAcc2D_acute_criticality/JsonIndex2D.json",
     renderingColorType : 2,  // 0= rainbow, 1= monotone, 2= legendColors.***
     renderBorder : true, // true, false.***
     textureFilterType : 0,  // 0= nearest, 1= linear.***
-    interpolationBetweenSlices : 0  // 0= nearest, 1= linear.***
+    interpolationBetweenSlices : 0,  // 0= nearest, 1= linear.***
+    textureFlipYAxis : true
   };
   let accidentLayerB = new Mago3D.ChemicalAccident2DLayer(optionsB);
   accidentLayerB.setLegendColors(getAcuteCriticalityLegendColors());
@@ -250,44 +297,16 @@ const load2dSimulation = () => {
     url : "/data/chemicalAccident/output_chemAcc2D_victim_distribution/JsonIndex2D.json",
     renderingColorType : 2,  // 0= rainbow, 1= monotone, 2= legendColors.***
     renderBorder : true, // true, false.***
-    textureFilterType : 0,  // 0= nearest, 1= linear.***
-    interpolationBetweenSlices : 0  // 0= nearest, 1= linear.***
+    textureFilterType : 1,  // 0= nearest, 1= linear.***
+    interpolationBetweenSlices : 0,  // 0= nearest, 1= linear.***
+    textureFlipYAxis : true
   };
   let accidentLayerC = new Mago3D.ChemicalAccident2DLayer(optionsC);
   accidentLayerC.setLegendColors(getVictimDistributionLegendColors());
   accidentLayerC.hide();
 
   magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerC);
-
-    //magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
-    //magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
-    //magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
-    //magoManager.chemicalAccident2dManager.hide();
-
 }
-
-/*const load2dAcuteCriticality = () => {
-  const magoInstance = props.transferViewer.magoInstance;
-  const magoManager = magoInstance.getMagoManager();
-  const path = "/data/chemicalAccident/output_chemAcc2D_Acute_Criticality";
-  const jsonPath = path + "/JsonIndex2D.json";
-  if (!magoManager.chemicalAccident2dManager) {
-    let options = {
-      magoManager : magoManager,
-      url : jsonPath,
-      renderingColorType : 2,
-      renderBorder : true,
-      textureFilterType : 1, // 0 = NEAREST, 1 = LINEAR
-      //geoJsonIndexFileFolderPath : path,
-      //geoJsonIndexFilePath : jsonPath,
-    };
-    magoManager.chemicalAccident2dManager = new Mago3D.ChemicalAccident2DManager(options);
-    magoManager.chemicalAccident2dManager._animationState = Mago3D.CODE.processState.STARTED;
-
-    magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
-    magoManager.chemicalAccident2dManager.hide();
-  }
-}*/
 
 const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : number, accentuationFactor : number) => {
   const logMin = Math.log(minValue + 1); // Evitar log(0)
@@ -306,18 +325,54 @@ const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : 
   return divisions;
 }
 
-const get3DLegendColors = () => {
-  const legendValuesScale = 1e10;
+const setLegendTable = (legendTitle : string, legendColors : any[], scale : number = 1.0) => {
+  legendList.value.list.length = 0;
+
+  let cssLinearGradient = "linear-gradient(";
+  for (let i = 0; i < legendColors.length; i++) {
+    let legend = legendColors[i];
+
+    let contextValue = (parseFloat(legendColors[i].value) / scale).toFixed(6);
+
+    let context = "";
+    context = contextValue;
+    /*if (i === (legendColors.length - 1)) {
+      context = contextValue;
+    } else {
+      context = contextValue + " ~ ";
+    }*/
+    /*if (i === 0) {
+      context = "0 ~ ";
+    } else {
+      context = legendColors[i - 1].value + " ~ ";
+    }*/
+    let color = "rgba(" + (legend.red * 255) + ", " + (legend.green * 255) + ", " + (legend.blue * 255) + ", " + 0.5 + ")";
+    legendList.value.list.push({
+      index : i,
+      context : context,
+      color : color
+    });
+    cssLinearGradient += color + ", ";
+  }
+  cssLinearGradient = cssLinearGradient.slice(0, -2) + ")";
+  legendList.value.title = legendTitle;
+  legendList.value.cssLinearGradient = cssLinearGradient;
+
+  //document.querySelector('div.legend').style.background = cssLinearGradient;
+}
+
+const get3DLegendColors = (scale : number) => {
+  const legendValuesScale = scale;
   const minValue = 0;
-  const maxValue = 112000000 * legendValuesScale;
+  const maxValue = 17100.0 * legendValuesScale;
   const numColors = 12;
-  const accentuationFactor = 1.0;
+  const accentuationFactor = 2.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-  const accentuationFactorAlpha = 3.5;
+  const accentuationFactorAlpha = 3.0;
   const alphaValues = getLogDivisions(0.0, 0.99, numColors, accentuationFactorAlpha);
 
   const legendColors = [];
-  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.0, legendValues[0]);  // 0
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, alphaValues[0], legendValues[0]);  // 0
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, alphaValues[1], legendValues[1]);  // 1
   legendColors.push(LegendColor);
@@ -345,113 +400,81 @@ const get3DLegendColors = () => {
   return legendColors;
 }
 
-const get2DLegendColors = () => {
-  const legendValuesScale = 1e10;
+const get2DLegendColors = (scale: number) => {
+  const legendValuesScale = scale;
   const minValue = 0;
   const maxValue = 17100.0 * legendValuesScale;
   const numColors = 12;
-  const accentuationFactor = 6.0;
+  const accentuationFactor = 2.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
 
   // create legend colors.***
   const legendColors = [];
+  let alphaColor = 0.5;
 
-  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.0, legendValues[0]);  // 0
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.1, legendValues[0]);  // 0
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, 128/255, legendValues[1]);  // 1
+  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, alphaColor, legendValues[1]);  // 1
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, 128/255, legendValues[2]);  // 2
+  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, alphaColor, legendValues[2]);  // 2
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, 128/255, legendValues[3]);  // 3
+  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, alphaColor, legendValues[3]);  // 3
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, 128/255, legendValues[4]);  // 4
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, alphaColor, legendValues[4]);  // 4
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, 128/255, legendValues[5]);  // 5
+  LegendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, alphaColor, legendValues[5]);  // 5
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(159/255, 255/255, 95/255, 128/255, legendValues[6]);  // 6
+  LegendColor = new Mago3D.ColorLegend(159/255, 255/255, 95/255, alphaColor, legendValues[6]);  // 6
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(239/255, 255/255, 15/255, 128/255, legendValues[7]);  // 7
+  LegendColor = new Mago3D.ColorLegend(239/255, 255/255, 15/255, alphaColor, legendValues[7]);  // 7
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 191/255, 0/255, 128/255, legendValues[8]);  // 8
+  LegendColor = new Mago3D.ColorLegend(255/255, 191/255, 0/255, alphaColor, legendValues[8]);  // 8
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 111/255, 0/255, 128/255, legendValues[9]);  // 9
+  LegendColor = new Mago3D.ColorLegend(255/255, 111/255, 0/255, alphaColor, legendValues[9]);  // 9
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 31/255, 0/255, 128/255, legendValues[10]);  // 10
+  LegendColor = new Mago3D.ColorLegend(255/255, 31/255, 0/255, alphaColor, legendValues[10]);  // 10
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, 128/255, legendValues[11]);  // 11
+  LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, alphaColor, legendValues[11]);  // 11
   legendColors.push(LegendColor);
 
   return legendColors;
 }
 
 const getAcuteCriticalityLegendColors = () => {
-  const legendValuesScale = 1e10;
-  const minValue = 0;
-  const maxValue = 1620000.0 * legendValuesScale;
-  const numColors = 10;
-  const accentuationFactor = 3.0;
-  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-
-  // create legend colors.***
   const legendColors = [];
 
-  //let alpha = 128/255;
-  let LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.0, legendValues[0]);  // 0
+  let alphaColor = 0.5;
+  let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.1, 0.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.1, legendValues[1]);  // 1
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 0/255, alphaColor, 1.0); // green
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.2, legendValues[2]);  // 2
+  LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 0/255, alphaColor, 2.0); // yellow
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.3, legendValues[3]);  // 3
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.4, legendValues[4]);  // 4
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.5, legendValues[5]);  // 5
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.6, legendValues[6]);  // 6
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.7, legendValues[7]);  // 7
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.8, legendValues[8]);  // 8
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(128/255, 255/255, 128/255, 0.9, legendValues[9]);  // 9
+  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, alphaColor, 3.0); // red
   legendColors.push(LegendColor);
 
   return legendColors;
 }
 
 const getVictimDistributionLegendColors = () => {
-  const legendValuesScale = 1e10;
-  const minValue = 0;
-  const maxValue = 1620000.0 * legendValuesScale;
-  const numColors = 10;
-  const accentuationFactor = 3.0;
-  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-
-  // create legend colors.***
   const legendColors = [];
 
-  //let alpha = 128/255;
-  let LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.0, legendValues[0]);  // 0
+  let alphaColor = 0.5;
+  let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.1, 0.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.1, legendValues[1]);  // 1
+  LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 255/255, alphaColor, 1.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.2, legendValues[2]);  // 2
+  LegendColor = new Mago3D.ColorLegend(0/255, 127/255, 255/255, alphaColor, 2.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.3, legendValues[3]);  // 3
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 127/255, alphaColor, 3.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.4, legendValues[4]);  // 4
+  LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 0/255, alphaColor, 6.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.5, legendValues[5]);  // 5
+  LegendColor = new Mago3D.ColorLegend(255/255, 127/255, 0/255, alphaColor, 9.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.6, legendValues[6]);  // 6
+  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, alphaColor, 12.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.7, legendValues[7]);  // 7
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.8, legendValues[8]);  // 8
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, 0.9, legendValues[9]);  // 9
-  legendColors.push(LegendColor);
+
   return legendColors;
 }
 
@@ -463,6 +486,7 @@ const startChemicalAccident3d = () => {
   }
   stopAllChemicalAccident();
   layerState.value.chemicalAccident3d = true;
+  layerState.value.selectedAccident = "chemicalAccident3d";
 
   // 농도
   const magoInstance = props.transferViewer.magoInstance;
@@ -477,6 +501,8 @@ const startChemicalAccident3d = () => {
       return;
     }
     chemicalAccidentLayer.setUseMinMaxValuesToRender(0)
+
+    setLegendTable("농도", get3DLegendColors(1e10), 1e10)
   }
 }
 
@@ -488,20 +514,16 @@ const startChemicalAccident2d = () => {
   }
   stopAllChemicalAccident();
   layerState.value.chemicalAccident2d = true;
+  layerState.value.selectedAccident = "chemicalAccident2d";
 
   // 노출량
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    //magoManager.chemicalAccident2dManager.setLegendColors(get2DLegendColors());
-    //magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
-    //magoManager.chemicalAccident2dManager.show();
-
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
     layer.show();
-    //firstLayer.setLegendColors(get2DLegendColors());
-    //firstLayer.setLegendValuesScale(1e10);
-    //layer.show();
+
+    setLegendTable("농도", get2DLegendColors(1e10), 1e10)
 
   }
 }
@@ -514,6 +536,7 @@ const startChemicalAccidentAcuteHazard = () => {
   }
   stopAllChemicalAccident();
   layerState.value.accidentAcuteHazard = true;
+  layerState.value.selectedAccident = "chemicalAccidentAcuteHazard";
 
   // 급성 위해도
   const magoInstance = props.transferViewer.magoInstance;
@@ -521,6 +544,7 @@ const startChemicalAccidentAcuteHazard = () => {
   if (magoManager.chemicalAccident2dManager) {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(1)
     layer.show();
+    setLegendTable("위해도", getAcuteCriticalityLegendColors())
   }
 }
 
@@ -528,10 +552,8 @@ const stopAllChemicalAccident = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    //magoManager.chemicalAccident2dManager.hide();
     magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0).hide();
     magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(1).hide()
-    //magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2).hide();
   }
   if (magoManager.chemicalAccidentManager) {
     magoManager.chemicalAccidentManager.hide();
@@ -550,20 +572,15 @@ const startVictimDistribution = () => {
   }
   stopAllVictim();
   layerState.value.victimDistribution = true;
+  layerState.value.selectedVictim = "victimDistribution";
 
   // 피해자 분포
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.chemicalAccident2dManager) {
-    //magoManager.chemicalAccident2dManager.show();
-    /*if (magoManager.chemicalAccident2dManager) {
-      magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2).show();
-    }*/
-
-    //magoManager.chemicalAccident2dManager.setLegendColors(getLegendColorsC());
-    //magoManager.chemicalAccident2dManager.setLegendValuesScale(1e10);
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2);
     layer.show();
+    setLegendTable("피해자 분포", getVictimDistributionLegendColors())
   }
 }
 
@@ -575,6 +592,7 @@ const startVictimMovement = () => {
   }
   stopAllVictim();
   layerState.value.victimMovement = true;
+  layerState.value.selectedVictim = "victimMovement";
   // 피해자 이동
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
@@ -586,14 +604,21 @@ const startVictimMovement = () => {
   }
 }
 
-const personalMovement = () => {
+const startPersonalMovement = () => {
   if (layerState.value.personalMovement) {
     stopAllVictim();
     layerState.value.selectedVictim = undefined;
     return;
   }
+  stopAllVictim();
   layerState.value.personalMovement = true;
+  layerState.value.selectedVictim = "personalMovement";
+
   store.toggleChartWindow();
+  console.log("개인별 상세 동선");
+  if (singleTrackEntity.value) {
+    singleTrackEntity.value.show = true;
+  }
 }
 
 
@@ -605,6 +630,9 @@ const stopAllVictim = () => {
     trackEntities.forEach((entity) => {
       entity.show = false;
     });
+    if (singleTrackEntity.value) {
+      singleTrackEntity.value.show = false;
+    }
   }
 
   store.hideChartWindow();
@@ -639,6 +667,11 @@ const getAnimationTimeController = () => {
 const getViewer = () => {
   return props.transferViewer.viewer;
 }
+
+defineExpose({
+  startPersonalMovement,
+  loadPersonalItinerary,
+});
 
 </script>
 
@@ -691,7 +724,7 @@ const getViewer = () => {
       <div class="switch-wrapper">
         <h4>개인별 상세 동선</h4>
         <label>
-          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="personalMovement"  @click="personalMovement()">
+          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="personalMovement"  @click="startPersonalMovement()">
           <span></span>
         </label>
       </div>
@@ -718,13 +751,6 @@ const getViewer = () => {
           <span></span>
         </label>
       </div>
-<!--      <div class="switch-wrapper">
-        <h4>그림자 효과</h4>
-        <label>
-          <input type="checkbox" name="victim-group" @change="">
-          <span></span>
-        </label>
-      </div>-->
     </div>
   </div>
   <div id="legend-layer" class="layer left top horizontal">
@@ -733,15 +759,12 @@ const getViewer = () => {
       <button class="close" @click="toggleLegend()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
     </h1>
     <div class="layer-contents horizontal" v-show="layerState.legend">
-      <h3>페놀 농도</h3>
-      <div class="legend-wrap">
-        <div class="legend"></div>
+      <h3 v-show="legendList.list.length > 0">{{legendList.title}}</h3>
+      <div class="legend-wrap" v-show="legendList.list.length > 0">
+        <div class="legend" :style="{ background: legendList.cssLinearGradient }"></div>
         <div class="datalist-wrap">
           <datalist>
-            <option value="0">0.03 ~ </option>
-            <option value="1">0.006 ~ 0.001</option>
-            <option value="2">0.001 ~ 0.005</option>
-            <option value="3">~ 0.001</option>
+            <option v-for= "legend in legendList.list" :key="legend.index">{{legend.context}}</option>
           </datalist>
         </div>
       </div>
@@ -823,7 +846,7 @@ div#simulation-layer h3 {
 }
 
 div#legend-layer {
-  min-width: 140px;
+  min-width: 170px;
   display: inline-block;
   overflow: hidden;
 }
@@ -844,7 +867,7 @@ div.datalist-wrap {
   vertical-align: middle;
 }
 div.datalist-wrap datalist {
-  height: 100px;
+  height: 200px;
   display: grid;
   grid-auto-flow: dense;
   position: relative;
@@ -863,15 +886,13 @@ div.datalist-wrap datalist > option:last-child {
   margin-bottom: -0.5em;
 }
 
-
-
 div.legend {
-  height: 100px;
+  height: 200px;
   width: 20px;
-  background: linear-gradient(red, yellow, green, blue);
+  /*background: linear-gradient(red, yellow, green, blue);*/
   border: 1px solid #464646;
   display: inline-block;
-  margin: 0px;
+  margin: 0;
   vertical-align: middle;
 }
 </style>

@@ -22,6 +22,7 @@ import "externals/cesium/Widget/Widget.css";
     magoInstance.value = newMagoInstance;
     cesiumViewer.value = newMagoInstance.getViewer()
     cesiumViewer.value.scene.globe.depthTestAgainstTerrain = false;
+    cesiumViewer.value.scene.globe.enableLighting = false;
     console.log('[MapComponent] mago3dInstance', magoInstance);
     console.log('[MapComponent] viewer', cesiumViewer);
   });

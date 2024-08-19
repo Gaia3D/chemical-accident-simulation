@@ -19,8 +19,8 @@ const transferViewer = ref({
   initPosition: {
     //lon: 126.978388,
     //lat: 37.566610,
-    lon: 126.65403123232736,
-    lat: 36.90329299539047,
+    lon: 126.68418943890646,
+    lat: 36.902156101663145,
     height: 20000
   },
   magoInstance: undefined
@@ -29,6 +29,7 @@ const mapComponent = ref();
 const mapSelector = ref();
 const mapController = ref();
 const chartLayer = ref();
+const simulationController = ref();
 
 const viewer = ref();
 const magoInstance = ref();
@@ -68,6 +69,7 @@ onMounted(async () => {
   transferViewer.value.magoInstance = magoInstance.value;
 
   viewer.value.scene.globe.depthTestAgainstTerrain = false;
+  viewer.value.scene.globe.enableLighting = false;
 
   const dateObject = new Date()
   const options = {
@@ -115,6 +117,8 @@ onMounted(async () => {
         if (data.detail) {
           chartLayer.value.setAccidentInfo(data.detail.accidentId, data.detail.userId);
           chartLayer.value.loadPersonalData();
+
+          simulationController.value.loadPersonalItinerary(data.detail.userId, true);
           store.showChartWindow();
         } else {
           console.error("[ERROR] No Detail Data");
@@ -132,12 +136,14 @@ onMounted(async () => {
 
 <template>
   <div class="loading" v-show="store.isShowLoading" v-if="store.isReady">
-    <span>시뮬레이션 데이터 로드 중</span>
+    <span>
+      시뮬레이션 데이터 로드 중 <div id="progressBar"><div class="spinner"></div></div>
+    </span>
   </div>
 
   <div class="float-layer left top horizontal" v-if="store.isReady">
     <div id="info" class="layer">
-      <h2>충청남도 당진시 시곡동 77-5 | 페놀(3,600L) 누출</h2>
+      <h2>충청남도 당진시 시곡동 77-5 | 포름알데히드(90,000KG) 누출</h2>
       <h4>분석데이터 : 2024/02/06 11:00 기준 (2일 0시간 예측)</h4>
 <!--      <h4>사고원인 : 시설결함</h4>-->
     </div>
@@ -199,5 +205,35 @@ div#logo img {
   width: 75px;
   height: 22px;
   margin: 5px 5px 0 5px;
+}
+
+div#progressBar {
+  display: inline-block;
+  background-color: #00000021;
+  text-align: center;
+  line-height: 250px;
+  z-index: 30;
+  font-size: 11px;
+  border-radius: 15px;
+  vertical-align: middle;
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid;
+  border-color: #ffffff transparent #ffffff transparent;
+  border-radius: 50%;
+  animation: spin-3fa90f43 1.2s linear infinite;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 51px;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

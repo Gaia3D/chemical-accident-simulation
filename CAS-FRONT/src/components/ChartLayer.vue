@@ -34,40 +34,13 @@ const toggleAcuteHarm = () => {
 
 const accidentInfo = ref({
   accidentId: 'CA201905001',
-  personalId: 'USER064'
+  personalId: 'USER001'
 });
 
 onMounted(async () => {
   console.log('[MainComponent] Mounted Chart Layer Component');
-  //store.showChartWindow();
-  loadPersonalData();
+  //loadPersonalData();
   layerState.value.isCas = true;
-
-  /*window.addEventListener('message', (event) => {
-    //console.log(event);
-    //console.log("Message Received")
-    const data = event.data;
-    if (data) {
-      if (data.action === "showChart") {
-        store.showChartWindow();
-      } else if (data.action === "hideChart") {
-        store.hideChartWindow();
-      } else if (data.action === "load") {
-        if (data.detail) {
-          accidentInfo.value.accidentId = data.detail.accidentId;
-          accidentInfo.value.personalId = data.detail.userId;
-          loadPersonalData();
-          store.showChartWindow();
-        } else {
-          console.error("[ERROR] No Detail Data");
-        }
-      }  else {
-        console.error("[ERROR] Unknown Action");
-      }
-    } else {
-      console.error("[ERROR] No Data");
-    }
-  });*/
 });
 
 const personalData = ref({
@@ -93,7 +66,6 @@ const loadPersonalData = () => {
       console.error("[ERROR] No Data");
       return;
     }
-
     personalData.value.json = json;
     lineChart.value.updateData(json);
     dosageLineChart.value.updateData(json);
@@ -294,8 +266,7 @@ defineExpose({
 
 .layer-body {
   background-color: rgba(220, 220, 220, 0.86);
-  margin: 5px;
-  margin-top: 0;
+  margin: 0 5px 5px;
   padding: 5px;
   border-radius: 0 10px 10px 10px;
 }
@@ -304,8 +275,7 @@ defineExpose({
 }
 
 .layer-tab {
-  margin: 5px;
-  margin-bottom: 0;
+  margin: 5px 5px 0;
 }
 .layer-tab div {
   display: inline-block;
