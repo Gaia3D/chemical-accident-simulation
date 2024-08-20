@@ -27,6 +27,9 @@ const data = {
 const options = {
   responsive: true,
   maintainAspectRatio: false,
+  animation: {
+    duration: 0
+  },
   scales: {
     x: {
       ticks: {
@@ -50,14 +53,15 @@ const options = {
     y: {
       ticks: {
         callback: function(value, index, ticks) {
-          return value + '㎍';
+          return (Math.round(value * 1000 * 10) / 10) + 'mg';
         },
         font : {
           size: 9,
         },
-        stepSize: 0.3
+        stepSize: 30.0 * 0.001
       },
-      min: 0.0,
+      min: 0,
+      max: 150.0 * 0.001,
     }
   },
   plugins: {
@@ -73,19 +77,19 @@ const options = {
       annotations: {
         line1: {
           type: 'line',
-          yMin: 368 / 1000,
-          yMax: 368 / 1000,
+          yMin: 1.1 * 0.001,
+          yMax: 1.1 * 0.001,
           borderColor: 'rgb(255,211,99)',
           borderWidth: 2,
         },
         label1: {
           type: 'label',
           xValue: 288,
-          yValue: 368 / 1000,
+          yValue: 1.1 * 0.001,
           yAdjust: -5,
           position: { x: 'end', y: 'center' },
           backgroundColor: 'rgba(245, 245, 245, 0)',
-          content: ['저위험 수준 (AEGL-1 10min 368 mg/m3) '],
+          content: ['저위험 수준 (AEGL-1 10min 1.1 mg/m3) '],
           textAlign: 'end',
           font: {
             size: 11,
@@ -95,19 +99,19 @@ const options = {
 
         line2: {
           type: 'line',
-          yMin: 868 / 1000,
-          yMax: 868 / 1000,
+          yMin: 17 * 0.001,
+          yMax: 17 * 0.001,
           borderColor: 'rgb(255,164,99)',
           borderWidth: 2,
         },
         label2: {
           type: 'label',
           xValue: 288,
-          yValue: 868 / 1000,
+          yValue: 17 * 0.001,
           yAdjust: -5,
           position: { x: 'end', y: 'center' },
           backgroundColor: 'rgba(245, 245, 245, 0)',
-          content: ['중위험 수준 (AEGL-2 10min 868 mg/m3)'],
+          content: ['중위험 수준 (AEGL-2 10min 17 mg/m3)'],
           textAlign: 'end',
           font: {
             size: 11,
@@ -116,19 +120,19 @@ const options = {
         },
         line3: {
           type: 'line',
-          yMin: 1568 / 1000,
-          yMax: 1568 / 1000,
+          yMin: 123 * 0.001,
+          yMax: 123 * 0.001,
           borderColor: 'rgb(255,99,99)',
           borderWidth: 2,
         },
         label3: {
           type: 'label',
           xValue: 288,
-          yValue: 1568 / 1000,
+          yValue: 123 * 0.001,
           yAdjust: -5,
           position: { x: 'end', y: 'center' },
           backgroundColor: 'rgba(245, 245, 245, 0)',
-          content: ['고위험 수준 (AEGL-3 10min 1568 mg/m3)'],
+          content: ['고위험 수준 (AEGL-3 10min 123 mg/m3)'],
           textAlign: 'end',
           font: {
             size: 11,

@@ -17,10 +17,11 @@ const props = defineProps<{
 
 onMounted(async () => {
   console.log('[SimulationController] Mounted Slider Component');
+  store.showLoading();
   setTimeout(() => {
     toggleRadius(getViewer());
     loadSimulations();
-  }, 100);
+  }, 2000);
 });
 
 const legendList : any = ref({
@@ -58,39 +59,15 @@ const paddingZero = (num: number) => {
   return (padding + num).slice(-padding.length);
 }
 
-const loadItinerary = () => {
+const loadItinerary = async () => {
   const viewer = getViewer();
-  const magoInstance = props.transferViewer.magoInstance;
-  const magoManager = magoInstance.getMagoManager();
-
   const itineraryPath = "/data/itinerary/";
-  const walkingManMosaicTexPath = itineraryPath + "navigation.png";
-  const options = {
-    magoManager: magoManager,
-    walkingManMosaicTexPath: walkingManMosaicTexPath,
-    walkingManMosaicColumnsCount: 1,
-    walkingManMosaicRowsCount: 1,
-    renderThickLine : false,
-    samplePointsSize : 0.0
-  };
-  magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
-  const itineraryManager = magoManager.itineraryManager;
-  let thickness = 1.5;
+
   for (let loop = 0; loop < 100; loop++) {
     let padded = paddingZero(loop + 1);
-    let filePath = itineraryPath + "USER" + padded + ".json";
-    let imagePath = "/data/navigations/navigation.png";
-    let layerOptions = {
-      filePath: filePath,
-      lineThickness: thickness,
-      thickLineColor: {
-        r: 0.5, g: 0.5, b: 0.5, a: 0.5
-      },
-      animatedIconFilePath : imagePath,
-    };
-
-    fetch(filePath, {method: "GET"}).then((response) => {
-      //console.log("response", response);
+    let userId = "USER" + padded;
+    let filePath = itineraryPath + userId + ".json";
+    await fetch(filePath, {method: "GET"}).then((response) => {
       return response.json()
     }).then((json) => {
       const centerGeographicCoord = json.centerGeographicCoord;
@@ -99,120 +76,56 @@ const loadItinerary = () => {
       const worldCoord = Cesium.Cartesian3.fromDegrees(centerGeographicCoord.longitude, centerGeographicCoord.latitude, centerGeographicCoord.altitude);
       const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(worldCoord);
 
-      const polylinePositions : any = [];
+      const positions = [];
+      const cartographicDegrees:any = [];
 
+      let increement = 0;
       for (let index = 0; index < localPositions.length; index+=3) {
         let x = localPositions[index];
         let y = localPositions[index + 1];
-        //let z = localPositions[index + 2];
         let z = 5;
 
         const localCartesian = new Cesium.Cartesian3(x, y, z);
-
         const translateMatrix = Cesium.Matrix4.fromTranslation(localCartesian, new Cesium.Matrix4());
-
         const translatedMatrix = Cesium.Matrix4.multiply(modelMatrix, translateMatrix, new Cesium.Matrix4());
         const worldPosition = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
 
-        polylinePositions.push(worldPosition);
+        positions.push(worldPosition);
+
+        const cartographic = Cesium.Cartographic.fromCartesian(worldPosition);
+
+        const lon = Cesium.Math.toDegrees(cartographic.longitude);
+        const lat = Cesium.Math.toDegrees(cartographic.latitude);
+
+        cartographicDegrees.push(increement += (60 * 10));
+        cartographicDegrees.push(lon);
+        cartographicDegrees.push(lat);
+        cartographicDegrees.push(0);
       }
 
-
-      const polylineEntitiy = viewer.entities.add({
-        name: "Blue dashed line",
+      const lineEntity = viewer.entities.add({
+        id: userId,
         polyline: {
-          positions: polylinePositions,
-          width: 2,
-          /*material: Cesium.Color.fromCssColorString("#555555"),*/
-          material: new Cesium.PolylineDashMaterialProperty({
-            color: Cesium.Color.GREY,
-            dashLength: 8,
-          }),
-          clampToGround : true,
+          positions: positions,
+          width: 1,
+          material: Cesium.Color.GREY,
         },
-        show: false
+        show: false,
       });
 
-      trackEntities.push(polylineEntitiy);
+      trackEntities.push(lineEntity);
     });
-
-    itineraryManager.newItineraryLayer(layerOptions);
-    itineraryManager.hide();
   }
-}
-
-const loadPersonalItinerary = (userId : string, endShow: boolean) => {
-  const viewer = getViewer();
-  const itineraryPath = "/data/itinerary/";
-  let filePath = itineraryPath + userId + ".json";
-
-  console.log("filePath", filePath);
-
-  fetch(filePath, {method: "GET"}).then((response) => {
-    return response.json()
-  }).then((json) => {
-    const centerGeographicCoord = json.centerGeographicCoord;
-    const localPositions = json.localPositions;
-
-    const worldCoord = Cesium.Cartesian3.fromDegrees(centerGeographicCoord.longitude, centerGeographicCoord.latitude, centerGeographicCoord.altitude);
-    const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(worldCoord);
-
-    const polylinePositions : any = [];
-
-    for (let index = 0; index < localPositions.length; index+=3) {
-      let x = localPositions[index];
-      let y = localPositions[index + 1];
-      //let z = localPositions[index + 2];
-      let z = 5;
-
-      const localCartesian = new Cesium.Cartesian3(x, y, z);
-
-      const translateMatrix = Cesium.Matrix4.fromTranslation(localCartesian, new Cesium.Matrix4());
-
-      const translatedMatrix = Cesium.Matrix4.multiply(modelMatrix, translateMatrix, new Cesium.Matrix4());
-      const worldPosition = Cesium.Matrix4.getTranslation(translatedMatrix, new Cesium.Cartesian3());
-
-      polylinePositions.push(worldPosition);
-    }
-
-    const polylineEntitiy = viewer.entities.add({
-      name: "Blue dashed line",
-      polyline: {
-        positions: polylinePositions,
-        width: 2,
-        material: new Cesium.PolylineDashMaterialProperty({
-          color: Cesium.Color.GREY,
-          dashLength: 8,
-        }),
-        clampToGround : true,
-      },
-      show: false
-    });
-
-    if (singleTrackEntity.value) {
-      viewer.entities.remove(singleTrackEntity.value);
-    }
-    singleTrackEntity.value = polylineEntitiy
-
-    if (endShow) {
-      //polylineEntitiy.show = true;
-      startPersonalMovement();
-      store.showChartWindow();
-    }
-  });
 }
 
 const loadSimulations = () => {
   getAnimationTimeController();
   load3dSimulation();
   load2dSimulation();
-  //load2dAcuteCriticality();
-  loadPersonalItinerary("USER001", false);
   loadItinerary();
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
 
-  store.showLoading();
   const interval = setInterval(() => {
     if (magoManager.chemicalAccidentManager.isReady() && magoManager.chemicalAccident2dManager.isReady()) {
       clearInterval(interval);
@@ -248,8 +161,8 @@ const load3dSimulation = () => {
     magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
 
-    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e10));
-    magoManager.chemicalAccidentManager.setLegendValuesScale(1e10);
+    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e8));
+    magoManager.chemicalAccidentManager.setLegendValuesScale(1e8);
     magoManager.chemicalAccidentManager.hide();
   }
 }
@@ -274,7 +187,7 @@ const load2dSimulation = () => {
     textureFlipYAxis : true
   };
   let accidentLayerA = new Mago3D.ChemicalAccident2DLayer(optionsA);
-  accidentLayerA.setLegendColors(get2DLegendColors(1e10));
+  accidentLayerA.setLegendColors(get2DLegendColors(1e8));
   accidentLayerA.hide();
 
   magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerA);
@@ -325,28 +238,23 @@ const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : 
   return divisions;
 }
 
-const setLegendTable = (legendTitle : string, legendColors : any[], scale : number = 1.0) => {
+const setLegendTable = (legendTitle : string, legendColors : any[], scale : number = 1.0, unit : string) => {
   legendList.value.list.length = 0;
-
   let cssLinearGradient = "linear-gradient(";
   for (let i = 0; i < legendColors.length; i++) {
     let legend = legendColors[i];
 
-    let contextValue = (parseFloat(legendColors[i].value) / scale).toFixed(6);
+    let contextValue;
+    if (scale === 1.0) {
+      contextValue = legend.value;
+    } else {
+      contextValue = (parseFloat(legend.value) / scale).toFixed(10);
+    }
 
     let context = "";
     context = contextValue;
-    /*if (i === (legendColors.length - 1)) {
-      context = contextValue;
-    } else {
-      context = contextValue + " ~ ";
-    }*/
-    /*if (i === 0) {
-      context = "0 ~ ";
-    } else {
-      context = legendColors[i - 1].value + " ~ ";
-    }*/
-    let color = "rgba(" + (legend.red * 255) + ", " + (legend.green * 255) + ", " + (legend.blue * 255) + ", " + 0.5 + ")";
+    let alpha = legend.alpha < 0.3 ? 0.3 : legend.alpha;
+    let color = "rgba(" + (legend.red * 255) + ", " + (legend.green * 255) + ", " + (legend.blue * 255) + ", " + alpha + ")";
     legendList.value.list.push({
       index : i,
       context : context,
@@ -356,20 +264,54 @@ const setLegendTable = (legendTitle : string, legendColors : any[], scale : numb
   }
   cssLinearGradient = cssLinearGradient.slice(0, -2) + ")";
   legendList.value.title = legendTitle;
+  legendList.value.unit = unit;
   legendList.value.cssLinearGradient = cssLinearGradient;
+}
 
-  //document.querySelector('div.legend').style.background = cssLinearGradient;
+const getDamageGrade = (grade : string) => {
+  switch (grade) {
+    case '1':
+      return '저위험';
+    case '2':
+      return '중위험';
+    case '3':
+      return '고위험';
+    default:
+      return '해당없음';
+  }
+}
+
+const setLegendTableForAcuteCriticality = (legendTitle : string, legendColors : any[], unit : string) => {
+  legendList.value.list.length = 0;
+  let cssLinearGradient = "linear-gradient(";
+  let percent = 100 / legendColors.length;
+  for (let i = 0; i < legendColors.length; i++) {
+    let legend = legendColors[i];
+    let contextValue = getDamageGrade(`${legend.value}`);
+    let alpha = legend.alpha < 0.3 ? 0.3 : legend.alpha;
+    let color = "rgba(" + (legend.red * 255) + ", " + (legend.green * 255) + ", " + (legend.blue * 255) + ", " + alpha + ")" + " " + (percent * i) + "% " + percent * (i + 1) + "%";
+    legendList.value.list.push({
+      index : i,
+      context : contextValue,
+      color : color
+    });
+    cssLinearGradient += color + ", ";
+  }
+  cssLinearGradient = cssLinearGradient.slice(0, -2) + ")";
+  legendList.value.title = legendTitle;
+  legendList.value.unit = unit;
+  legendList.value.cssLinearGradient = cssLinearGradient;
 }
 
 const get3DLegendColors = (scale : number) => {
   const legendValuesScale = scale;
   const minValue = 0;
-  const maxValue = 17100.0 * legendValuesScale;
+  const maxValue = 112000000.0 * legendValuesScale;
   const numColors = 12;
-  const accentuationFactor = 2.0;
+  const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-  const accentuationFactorAlpha = 3.0;
-  const alphaValues = getLogDivisions(0.0, 0.99, numColors, accentuationFactorAlpha);
+  const accentuationFactorAlpha = 2.0;
+  const alphaValues = getLogDivisions(0.0, 1.0, numColors, accentuationFactorAlpha);
 
   const legendColors = [];
   let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, alphaValues[0], legendValues[0]);  // 0
@@ -403,7 +345,7 @@ const get3DLegendColors = (scale : number) => {
 const get2DLegendColors = (scale: number) => {
   const legendValuesScale = scale;
   const minValue = 0;
-  const maxValue = 17100.0 * legendValuesScale;
+  const maxValue = 1620000.0 * legendValuesScale;
   const numColors = 12;
   const accentuationFactor = 2.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
@@ -502,7 +444,7 @@ const startChemicalAccident3d = () => {
     }
     chemicalAccidentLayer.setUseMinMaxValuesToRender(0)
 
-    setLegendTable("농도", get3DLegendColors(1e10), 1e10)
+    setLegendTable("농도", get3DLegendColors(1e8), 1e8, "(μg/㎥)")
   }
 }
 
@@ -523,7 +465,7 @@ const startChemicalAccident2d = () => {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
     layer.show();
 
-    setLegendTable("농도", get2DLegendColors(1e10), 1e10)
+    setLegendTable("농도", get2DLegendColors(1e8), 1e8, "(μg/㎥)")
 
   }
 }
@@ -544,7 +486,7 @@ const startChemicalAccidentAcuteHazard = () => {
   if (magoManager.chemicalAccident2dManager) {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(1)
     layer.show();
-    setLegendTable("위해도", getAcuteCriticalityLegendColors())
+    setLegendTableForAcuteCriticality("위해도", getAcuteCriticalityLegendColors(), "")
   }
 }
 
@@ -580,7 +522,7 @@ const startVictimDistribution = () => {
   if (magoManager.chemicalAccident2dManager) {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(2);
     layer.show();
-    setLegendTable("피해자 분포", getVictimDistributionLegendColors())
+    setLegendTable("피해자 분포", getVictimDistributionLegendColors(), 1, "(명/㎡)")
   }
 }
 
@@ -593,49 +535,88 @@ const startVictimMovement = () => {
   stopAllVictim();
   layerState.value.victimMovement = true;
   layerState.value.selectedVictim = "victimMovement";
+
+  setLegendTable("", [], 1, "")
+  trackEntities.forEach((entity) => {
+    entity.show = true;
+  });
+
   // 피해자 이동
-  const magoInstance = props.transferViewer.magoInstance;
+  /*const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
   if (magoManager.itineraryManager) {
+    const layers = magoManager.itineraryManager._itineraryLayersArray;
     magoManager.itineraryManager.show();
-    trackEntities.forEach((entity) => {
-      entity.show = true;
+    layers.forEach((itinerarylayer : any) => {
+      itinerarylayer.setLayerShow(true);
     });
-  }
+
+
+  }*/
 }
 
 const startPersonalMovement = () => {
+  stopAllVictim();
+  layerState.value.selectedVictim = "personalMovement";
+  setLegendTable("", [], 1, "")
+}
+
+/*const togglePersonalMovement = () => {
   if (layerState.value.personalMovement) {
     stopAllVictim();
     layerState.value.selectedVictim = undefined;
+    store.hideChartWindow();
     return;
   }
   stopAllVictim();
   layerState.value.personalMovement = true;
   layerState.value.selectedVictim = "personalMovement";
 
-  store.toggleChartWindow();
-  console.log("개인별 상세 동선");
-  if (singleTrackEntity.value) {
-    singleTrackEntity.value.show = true;
-  }
-}
+  /!*const magoInstance = props.transferViewer.magoInstance;
+  const magoManager = magoInstance.getMagoManager();
+  if (magoManager.itineraryManager) {
+    magoManager.itineraryManager.show();
+    const layers = magoManager.itineraryManager._itineraryLayersArray;
+    layers.forEach((itinerarylayer : any) => {
+      //console.log(itinerarylayer)
+      if (itinerarylayer._filePath.indexOf(userId) >= 0) {
+        itinerarylayer.setLayerShow(true);
+      } else {
+        itinerarylayer.setLayerShow(false);
+      }
+    });
+  }*!/
+  setLegendTable("", [], 1, "")
+  store.showChartWindow();
+}*/
 
 
 const stopAllVictim = () => {
   const magoInstance = props.transferViewer.magoInstance;
   const magoManager = magoInstance.getMagoManager();
-  if (magoManager.itineraryManager) {
+  /*if (magoManager.itineraryManager) {
     magoManager.itineraryManager.hide();
+    const layers = magoManager.itineraryManager._itineraryLayersArray;
+    layers.forEach((itinerarylayer : any) => {
+      itinerarylayer.setLayerShow(false);
+    });
+
     trackEntities.forEach((entity) => {
       entity.show = false;
     });
     if (singleTrackEntity.value) {
       singleTrackEntity.value.show = false;
     }
+  }*/
+
+  trackEntities.forEach((entity) => {
+    entity.show = false;
+  });
+  if (singleTrackEntity.value) {
+    singleTrackEntity.value.show = false;
   }
 
-  store.hideChartWindow();
+  //store.hideChartWindow();
   layerState.value.victimDistribution = false;
   layerState.value.victimMovement = false;
   layerState.value.personalMovement = false;
@@ -670,7 +651,6 @@ const getViewer = () => {
 
 defineExpose({
   startPersonalMovement,
-  loadPersonalItinerary,
 });
 
 </script>
@@ -721,13 +701,13 @@ defineExpose({
           <span></span>
         </label>
       </div>
-      <div class="switch-wrapper">
+<!--      <div class="switch-wrapper">
         <h4>개인별 상세 동선</h4>
         <label>
-          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="personalMovement"  @click="startPersonalMovement()">
+          <input type="radio" name="victim-group" v-model="layerState.selectedVictim" value="personalMovement"  @click="togglePersonalMovement()">
           <span></span>
         </label>
-      </div>
+      </div>-->
       <div class="line"></div>
       <h3>기타 레이어</h3>
       <div class="switch-wrapper">
@@ -759,7 +739,8 @@ defineExpose({
       <button class="close" @click="toggleLegend()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
     </h1>
     <div class="layer-contents horizontal" v-show="layerState.legend">
-      <h3 v-show="legendList.list.length > 0">{{legendList.title}}</h3>
+      <span class="legend-unit" v-if="legendList.list.length > 0">{{legendList.unit}}</span>
+      <h3 v-if="legendList.list.length > 0">{{legendList.title}}</h3>
       <div class="legend-wrap" v-show="legendList.list.length > 0">
         <div class="legend" :style="{ background: legendList.cssLinearGradient }"></div>
         <div class="datalist-wrap">
@@ -773,24 +754,6 @@ defineExpose({
 </template>
 
 <style scoped>
-
-/*h1 button {
-  float: right;
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: absolute;
-  right: 10px;
-  padding: 0;
-  width: 16px;
-  height: 16px;
-}
-
-h1 button img {
-  width: 100%;
-  height: 100%;
-  filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(74deg) brightness(104%) contrast(103%);
-}*/
 
 div.loading {
   position: absolute;
@@ -812,6 +775,12 @@ div.loading span {
   font-size: 12px;
   translate: -50% -50%;
   line-height: 14px;
+}
+span.legend-unit {
+  position: absolute;
+  right: 2px;
+  text-align: right;
+  font-size: 10px;
 }
 
 div#simulation-layer {
@@ -875,16 +844,22 @@ div.datalist-wrap datalist {
 }
 
 div.datalist-wrap datalist > option {
-  margin-top: -0.5em;
+  /*margin-top: -0.5em;
   font-size: 0.8em;
   margin-left: 5px;
+*/
+  font-size: 0.8em;
+  margin-left: 5px;
+  vertical-align: middle;
+  /* text-align: center; */
+  align-content: center;
 }
 
-div.datalist-wrap datalist > option:last-child {
+/*div.datalist-wrap datalist > option:last-child {
   position: absolute;
   bottom: 0;
   margin-bottom: -0.5em;
-}
+}*/
 
 div.legend {
   height: 200px;

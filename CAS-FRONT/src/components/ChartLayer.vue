@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import "../map-custom.css";
 import CasLineChart from "./CasLineChart.vue";
 import DosageLineChart from "./DosageLineChart.vue";
@@ -20,6 +20,12 @@ const layerState = ref({
   isDosage: false,
 });
 
+const personalTrackEntity : any = ref(undefined);
+
+const props = defineProps<{
+  transferViewer: any;
+}>();
+
 const toggleChronic = () => {
   layerState.value.chronicInfo = !layerState.value.chronicInfo;
 }
@@ -28,18 +34,16 @@ const toggleAcuteHarm = () => {
   layerState.value.acuteHarmInfo = !layerState.value.acuteHarmInfo;
 }
 
-/*const props = defineProps<{
-  transferViewer: any;
-}>();*/
-
-const accidentInfo = ref({
-  accidentId: 'CA201905001',
-  personalId: 'USER001'
+watch(() => store.isShowChartWindow, (isShow) => {
+  //console.log('[MainComponent] Watch Chart Window', isShow);
+  if (!personalTrackEntity.value) {
+    return;
+  }
+  personalTrackEntity.value.show = isShow;
 });
 
 onMounted(async () => {
   console.log('[MainComponent] Mounted Chart Layer Component');
-  //loadPersonalData();
   layerState.value.isCas = true;
 });
 
@@ -47,13 +51,23 @@ const personalData = ref({
   json : undefined
 });
 
-const setAccidentInfo = (accidentId : string, personalId : string) => {
-  accidentInfo.value.accidentId = accidentId;
-  accidentInfo.value.personalId = personalId;
+const getDamageGrade = (grade : string) => {
+  switch (grade) {
+    case '1':
+      return '저위험';
+    case '2':
+      return '중위험';
+    case '3':
+      return '고위험';
+    default:
+      return '해당없음';
+  }
 }
 
-const loadPersonalData = () => {
-  const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentInfo.value.accidentId}/personal/${accidentInfo.value.personalId}`;
+const loadPersonalRiskData = (personalId : string) => {
+  const chemicalAccidentInfo = store.getChemicalAccidentInfo();
+  const accidentId = chemicalAccidentInfo.accidentInfo.accidentNo;
+  const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentId}/personal/${personalId}/risk`;
   fetch(url, {
     method:'GET',
     headers: {
@@ -62,6 +76,93 @@ const loadPersonalData = () => {
   }).then((response) => {
     return response.json()
   }).then((json) => {
+    json.indiDamageGrade = getDamageGrade(json.indiDamageGrade);
+    store.getChemicalAccidentInfo().personRiskInfo = json;
+    console.log(json);
+  }).catch((error) => {
+    console.error(error);
+  })
+}
+
+const drawTrackEntity = async (list : any[]) => {
+  const viewer = getViewer();
+  let cartographicDegrees : any[] = [];
+  let timeUnit = (60 * 10); // 10분
+  let increement = -timeUnit;
+  list.forEach((item : any) => {
+    let lon = item.utmkX;
+    let lat = item.utmkY;
+
+    cartographicDegrees.push(increement += timeUnit);
+    cartographicDegrees.push(lon);
+    cartographicDegrees.push(lat);
+    cartographicDegrees.push(0);
+  });
+
+  const czml = [
+    {
+      id: "document",
+      name: "CZML Path",
+      version: "1.0",
+    },
+    {
+      id: store.getChemicalAccidentInfo().personRiskInfo.personalId,
+      availability: "2024-02-06T02:00:00Z/2024-02-08T02:00:00Z",
+      path: {
+        material: {
+          polylineDash: {
+            color: {
+              rgba: [128, 128, 128, 255],
+            },
+          },
+          width: 2,
+        },
+        width: 4,
+        leadTime: 10,
+        trailTime: 10000000,
+        resolution: 5,
+      },
+      billboard: {
+        //image: "/src/assets/images/icons/man.png",
+        image: "/data/icons/man.png",
+        width: 32,
+        height: 32,
+        pixelOffset : new Cesium.Cartesian2(0.0, -16),
+      },
+      position: {
+        epoch: "2024-02-06T02:00:00Z",
+        cartographicDegrees: cartographicDegrees,
+      },
+    },
+  ];
+
+  viewer.dataSources.removeAll();
+  const dataSource = await viewer.dataSources.add(
+      Cesium.CzmlDataSource.load(czml)
+  );
+
+  personalTrackEntity.value = dataSource.entities.getById(store.getChemicalAccidentInfo().personRiskInfo.personalId);
+  viewer.trackedEntity = dataSource.entities.getById("path");
+}
+
+
+const loadPersonalData = (personalId : string) => {
+  const chemicalAccidentInfo = store.getChemicalAccidentInfo();
+  const accidentId = chemicalAccidentInfo.accidentInfo.accidentNo;
+  const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentId}/personal/${personalId}`;
+  //const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentInfo.value.accidentId}/personal/${accidentInfo.value.personalId}`;
+  fetch(url, {
+    method:'GET',
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  }).then((response) => {
+    return response.json()
+  }).then((json) => {
+    console.log(json);
+    drawTrackEntity(json);
+
+    store.getChemicalAccidentInfo().personInfo = json;
     if (!json || json.length === 0) {
       console.error("[ERROR] No Data");
       return;
@@ -88,14 +189,14 @@ const toggleLayer = () => {
   store.toggleChartWindow();
 }
 
-defineExpose({
-  setAccidentInfo,
-  loadPersonalData
-});
-
-/*const getViewer = () => {
+const getViewer = () => {
   return props.transferViewer.viewer;
-}*/
+}
+
+defineExpose({
+  loadPersonalData,
+  loadPersonalRiskData
+});
 
 </script>
 
@@ -112,30 +213,30 @@ defineExpose({
         <tr>
           <th>등급</th>
           <th>피해정도</th>
-          <th>평가 기준치</th>
+          <th>평가 기준치 <br>({{store.getChemicalAccidentInfo().chemicalInfo.chemicalNm}} - {{store.getChemicalAccidentInfo().chemicalInfo.chemicalEngNm}})</th>
         </tr>
         </thead>
         <tbody>
         <tr>
           <td>고위험</td>
           <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level3) 초과 <br/> (AEGL-3 10min : 200mg/m3)</td>
+          <td>급성 독성 참고치(Level3) 초과 <br/> (AEGL-3 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl3Conc}}mg/m3)</td>
         </tr>
         <tr>
           <td>중위험</td>
-          <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level2) 초과 <br/> (AEGL-2 10min : 110mg/m3)</td>
+          <td>비가역적 또는 심각하고, 지속가능한 장애 효과를 가져올 수 있는 피해 정도</td>
+          <td>급성 독성 참고치(Level2) 초과 <br/> (AEGL-2 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl2Conc}}mg/m3)</td>
         </tr>
         <tr>
           <td>저위험</td>
-          <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level1) 초과 <br/> (AEGL-1 10min : 73mg/m3)
+          <td>상당한 불쾌감, 자극, 어던 증상을 동반하지 않는 피해 정도</td>
+          <td>급성 독성 참고치(Level1) 초과 <br/> (AEGL-1 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl1Conc}}mg/m3)
           </td>
         </tr>
         <tr>
           <td>해당없음</td>
           <td>피해 없음</td>
-          <td>급성 독성 참고치(Level1) 미만 <br/> (AEGL-1 10min : 73mg/m3)
+          <td>급성 독성 참고치(Level1) 미만 <br/> (AEGL-1 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl1Conc}}mg/m3)
           </td>
         </tr>
         </tbody>
@@ -158,7 +259,7 @@ defineExpose({
         <tbody>
         <tr>
           <td>호흡 발암</td>
-          <td rowspan="2">국립환경과학원 화학물질 위해성평가의 구체적 방법 등에 관한 규정, US EPA 에서는 만성위해도값이 10^-6 값 이하인 경우 위해도가 없다고 판단함
+          <td rowspan="2">국립환경과학원 화학물질 위해성평가의 구체적 방법 등에 관한 규정, <br> US EPA 에서는 만성위해도값이 10^-6 값 이하인 경우 위해도가 없다고 판단함
           </td>
         </tr>
         <tr>
@@ -166,7 +267,7 @@ defineExpose({
         </tr>
         <tr>
           <td>호흡비발암</td>
-          <td rowspan="2">국립환경과학원 화학물질 위해성평가의 구체적 방법 등에 관한 규정, US EPA 에서는 만성위해도값이 1 미만인 경우 위해도가 없다고 판단함</td>
+          <td rowspan="2">국립환경과학원 화학물질 위해성평가의 구체적 방법 등에 관한 규정, <br> US EPA 에서는 만성위해도값이 1 미만인 경우 위해도가 없다고 판단함</td>
         </tr>
         <tr>
           <td>섭취-토양 비발암</td>
@@ -185,11 +286,11 @@ defineExpose({
     <div class="layer-contents">
       <div class="chart-info">
         <div>
-          예상 피해자 ID : <span>{{ accidentInfo.personalId }}</span>
+          예상 피해자 ID : <span>{{store.getChemicalAccidentInfo().personRiskInfo.personalId}}</span>
         </div>
         <div class="vertical-line"></div>
         <div>
-          개인피해등급 : <span>고위험</span>
+          개인피해등급 : <span>{{store.getChemicalAccidentInfo().personRiskInfo.indiDamageGrade}}</span>
         </div>
         <div>
           <button class="info" @click="toggleAcuteHarm()">
@@ -200,18 +301,11 @@ defineExpose({
         <div>
           만성 위해도 :
         </div>
-        <div class="vertical-line"></div>
         <div>
-          호흡-발암 위해유무 : O (2.13E-06)
+          호흡-발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicRespCarcDamage}} ({{store.getChemicalAccidentInfo().personRiskInfo.chronicExpSoilIngnoncarc}}) <br> 호흡-비발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicRespNoncarcDamage}} ({{store.getChemicalAccidentInfo().personRiskInfo.chronicExposureAmt}})
         </div>
         <div>
-          호흡-비발암 위해유무 : X (0.23E-05)
-        </div>
-        <div>
-          섭취/토양-발암 위해유무 : O (2.13E-06)
-        </div>
-        <div>
-          섭취/토양-비발암 위해유무 : X (0.23E-05)
+          섭취/토양-발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicSoilCarcDamage}} ({{ store.getChemicalAccidentInfo().personRiskInfo.chronicExpSoilIngcarc }}) <br> 섭취/토양-비발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicSoilNoncarcRisk}} ({{store.getChemicalAccidentInfo().personRiskInfo.chronicExpSoilIngnoncarc}})
         </div>
         <button class="info" @click="toggleChronic()">
           <img class="icon" src="/src/assets/images/icons/info.png">
@@ -222,7 +316,10 @@ defineExpose({
           개인피해등급(급성위해도)
         </div>
         <div @click="selectDosage()" v-bind:class="layerState.isDosage ? 'selected' : ''">
-          만성노출량
+          노출량
+        </div>
+        <div class="chemical-info">
+          {{store.getChemicalAccidentInfo().chemicalInfo.chemicalNm}}({{store.getChemicalAccidentInfo().chemicalInfo.chemicalEngNm}})
         </div>
       </div>
       <div class="layer-body">
@@ -237,11 +334,19 @@ defineExpose({
   </div>
 </template>
 <style scoped>
+.chemical-info {
+  position: relative;
+  right: 0;
+  float: right;
+  padding: 8px !important;
+  background: unset !important;
+}
+
 #chart-layer {
   width: calc(100vw - 40px);
   /*height: 200px;*/
   overflow: hidden;
-  background-color: #ffffffd1;
+  /*background-color: #ffffffd1;*/
 }
 .chart-info {
   min-height: 30px;
@@ -299,6 +404,7 @@ button.info {
 button > img {
   width: 100%;
   height: 100%;
+  filter: brightness(0) saturate(100%) invert(53%) sepia(0%) saturate(1352%) hue-rotate(179deg) brightness(65%) contrast(77%);
 }
 
 </style>

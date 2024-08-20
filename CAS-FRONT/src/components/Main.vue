@@ -14,6 +14,11 @@ const Cesium = window.Cesium;
 /* @ts-ignore */
 const Mago3D = window.Mago3D;
 
+const chemicalAccidentInfo = ref({
+  accidentInfo : undefined,
+  chemicalInfo : undefined,
+});
+
 const transferViewer = ref({
   viewer: undefined,
   initPosition: {
@@ -60,6 +65,62 @@ const paddedTime = (date: Date) => {
 }
 
 
+const formatDate = (dateString: string) => {
+  // "20190527 11:00" -> "2019-05-27 11:00"
+  let yyyy = dateString.substring(0, 4)
+  let mm = dateString.substring(4, 6)
+  let dd = dateString.substring(6, 8)
+  let hh = dateString.substring(9, 11)
+  let min = dateString.substring(12, 14)
+
+  store.getChemicalAccidentInfo().fakeTime.year = yyyy;
+  store.getChemicalAccidentInfo().fakeTime.month = mm;
+  store.getChemicalAccidentInfo().fakeTime.day = dd;
+  store.getChemicalAccidentInfo().fakeTime.hour = hh;
+  store.getChemicalAccidentInfo().fakeTime.min = min;
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`
+}
+
+const loadAccidentInfo = (accidentId : string) => {
+  const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentId}`;
+  fetch(url, {
+    method:'GET',
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  }).then((response) => {
+    return response.json()
+  }).then((json) => {
+    console.log("json", json);
+    json.accidentDttm = formatDate(json.accidentDttm);
+    store.getChemicalAccidentInfo().accidentInfo = json;
+    chemicalAccidentInfo.value.accidentInfo = json;
+  }).catch((error) => {
+    console.error("[ERROR] Failed to load accident info");
+    console.error(error);
+  });
+}
+
+const loadChemicalInfo = (accidentId : string) => {
+  const url = `${import.meta.env.VITE_API_SERVER}/accident/${accidentId}/chemical`;
+  fetch(url, {
+    method:'GET',
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
+  }).then((response) => {
+    return response.json()
+  }).then((json) => {
+    store.getChemicalAccidentInfo().chemicalInfo = json;
+    chemicalAccidentInfo.value.chemicalInfo = json;
+    console.log("json", json);
+  }).catch((error) => {
+    console.error("[ERROR] Failed to load accident info");
+    console.error(error);
+  });
+}
+
 onMounted(async () => {
   console.log('[MainComponent] Mounted Main Component');
 
@@ -90,6 +151,11 @@ onMounted(async () => {
   mapController.value.flyTo(initPosition.lon, initPosition.lat, initPosition.height, 0);
   mapSelector.value.toggleVWorldBaseLayer();
 
+
+  const chemicalAccidentId = "CA201905001"
+  loadAccidentInfo(chemicalAccidentId);
+  loadChemicalInfo(chemicalAccidentId);
+
   // esc key event
   let debugCount = 1;
   window.addEventListener('keydown', (event) => {
@@ -113,12 +179,10 @@ onMounted(async () => {
         store.showChartWindow();
       } else if (data.action === "hideChart") {
         store.hideChartWindow();
-      } else if (data.action === "loadChart") {
+      } else if (data.action === "load") {
         if (data.detail) {
-          chartLayer.value.setAccidentInfo(data.detail.accidentId, data.detail.userId);
-          chartLayer.value.loadPersonalData();
-
-          simulationController.value.loadPersonalItinerary(data.detail.userId, true);
+          chartLayer.value.loadPersonalRiskData(data.detail.userId);
+          chartLayer.value.loadPersonalData(data.detail.userId);
           store.showChartWindow();
         } else {
           console.error("[ERROR] No Detail Data");
@@ -143,12 +207,12 @@ onMounted(async () => {
 
   <div class="float-layer left top horizontal" v-if="store.isReady">
     <div id="info" class="layer">
-      <h2>충청남도 당진시 시곡동 77-5 | 포름알데히드(90,000KG) 누출</h2>
-      <h4>분석데이터 : 2024/02/06 11:00 기준 (2일 0시간 예측)</h4>
+      <h2>{{store.getChemicalAccidentInfo().accidentInfo.jibunAddr}} | {{store.getChemicalAccidentInfo().chemicalInfo.chemicalNm}}({{ store.getChemicalAccidentInfo().accidentInfo.leakAmount }}{{ store.getChemicalAccidentInfo().accidentInfo.unit }}) 누출</h2>
+      <h4>분석데이터 : {{store.getChemicalAccidentInfo().accidentInfo.accidentDttm}} 기준 (2일 0시간 예측)</h4>
 <!--      <h4>사고원인 : 시설결함</h4>-->
     </div>
     <div class="left vertical">
-      <SimulationController :transfer-viewer="transferViewer" ref="simulationController"/>
+      <SimulationController :transferViewer="transferViewer" ref="simulationController"/>
     </div>
   </div>
   <div class="float-layer right top horizontal" v-show="store.isReady">
@@ -158,8 +222,8 @@ onMounted(async () => {
   <div class="float-layer right bottom vertical" v-if="store.isReady">
   </div>
   <div class="float-layer left bottom horizontal" v-if="store.isReady">
-    <ChartLayer ref="chartLayer"/>
-    <TimeSlider :transfer-viewer="transferViewer" ref="timeSlider"/>
+    <ChartLayer :transferViewer="transferViewer" ref="chartLayer"/>
+    <TimeSlider :transferViewer="transferViewer" ref="timeSlider"/>
   </div>
   <Map :init-options="options" ref="mapComponent"/>
 </template>
@@ -223,7 +287,7 @@ div#progressBar {
   border: 3px solid;
   border-color: #ffffff transparent #ffffff transparent;
   border-radius: 50%;
-  animation: spin-3fa90f43 1.2s linear infinite;
+  animation: spin 1.2s linear infinite;
   text-align: center;
   vertical-align: middle;
   line-height: 51px;

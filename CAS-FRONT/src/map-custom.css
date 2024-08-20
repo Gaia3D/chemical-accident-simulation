@@ -105,7 +105,19 @@ div.non-modal td, div.non-modal th {
   min-width: 150px;
   font-size: 12px;
   word-break: break-word;
+  text-align: center;
 }
+
+div.non-modal td:first-child {
+  min-width: 100px;
+}
+div.non-modal td:nth-child(2) {
+  min-width: 250px;
+}
+div.non-modal td:nth-child(3) {
+  min-width: 250px;
+}
+
 
 div.non-modal table {
   display: inline-block;
@@ -158,6 +170,7 @@ h1 button.close {
 .layer-contents {
   margin-top: 10px;
   margin-bottom: 10px;
+  position: relative;
 }
 
 button {

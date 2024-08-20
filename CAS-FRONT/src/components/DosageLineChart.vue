@@ -17,6 +17,9 @@ Chart.register(annotationPlugin);
 const options = {
   responsive: true,
   maintainAspectRatio: false,
+  animation: {
+    duration: 0
+  },
   scales: {
     x: {
       ticks: {
@@ -50,7 +53,7 @@ const options = {
     }
   },
   plugins: {
-    annotation: {
+    /*annotation: {
       annotations: {
         line1: {
           type: 'line',
@@ -60,7 +63,7 @@ const options = {
           borderWidth: 2,
         }
       }
-    }
+    }*/
   }
 }
 

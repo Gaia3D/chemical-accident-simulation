@@ -37,4 +37,10 @@ public class AccidentController {
         var personalLocationInfo = accidentService.getPersonalLocationInfo(accidentCode, personalId);
         return ResponseEntity.ok(personalLocationInfo);
     }
+
+    @GetMapping("/{accidentCode}/personal/{personalId}/risk")
+    public ResponseEntity<?> getIndividualChrRisk(@PathVariable("accidentCode") String accidentCode, @PathVariable("personalId") String personalId) {
+        var individualChrRisk = accidentService.getIndividualChrRisk(accidentCode, personalId);
+        return ResponseEntity.ok(individualChrRisk);
+    }
 }

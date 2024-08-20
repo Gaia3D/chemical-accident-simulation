@@ -17,6 +17,7 @@ export const toggleRadius = async (viewer : any) => {
     const range = 1000
     const position = Cesium.Cartesian3.fromDegrees(126.68418943890646, 36.902156101663145);
 
+    const size : 32 = 32;
     const center = viewer.entities.add({
         name: "Dome",
         position: position,
@@ -27,15 +28,18 @@ export const toggleRadius = async (viewer : any) => {
             outline: false,
             outlineColor: Cesium.Color.RED.withAlpha(outerFactor),
         },
-        /*cylinder: {
-            length: 0.1,
-            topRadius: 1,
-            bottomRadius: 1,
+        billboard: {
+            //image: url,
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-            outline: true,
-            fill: false,
-        },*/
-        label: {
+            //image: "/src/assets/images/icons/marker.png",
+            image: "/data/icons/marker.png",
+            verticalOrigin: Cesium.VerticalOrigin.center,
+            pixelOffset : new Cesium.Cartesian2(0.0, -(size/2)),
+            width: size,
+            height: size,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+        /*label: {
             text: "사고지점",
             showBackground: true,
             backgroundColor: Cesium.Color.WHITE,
@@ -45,9 +49,8 @@ export const toggleRadius = async (viewer : any) => {
             pixelOffset: new Cesium.Cartesian2(0, 20),
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
             heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        }
+        }*/
     });
-
 
     /*const computedCircle = viewer.entities.add({
         polylineVolume: {

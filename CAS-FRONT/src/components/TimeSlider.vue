@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import "../map-custom.css";
+import {store} from "../store/store.ts";
 
 /* @ts-ignore */
 const Cesium = window.Cesium;
@@ -23,7 +24,7 @@ const timeTable = ref<any>({
   endTime : {
     year : 2024,
     month : 2,
-    day : 7,
+    day : 8,
     hour : 11,
     minute : 0,
     second : 0
@@ -37,6 +38,15 @@ const timeTable = ref<any>({
 });
 
 const percentage = ref({'width' : '0%'});
+
+const startTimeAnimation = (timeScale: number) => {
+  const animationTimeController = getAnimationTimeController();
+  timeTable.value.nowUnixTimeMilisec = 0;
+  animationTimeController._currentUnixTimeMilisec = animationTimeController._animationStartUnixTimeMilisec;
+  setTimeScale(timeScale);
+  setTime(true);
+  play();
+}
 
 const setTimeScale = (timeScale: number) => {
   const animationTimeController = getAnimationTimeController();
@@ -140,6 +150,25 @@ const stop = () => {
   animationTimeController._currentUnixTimeMilisec = animationTimeController._animationStartUnixTimeMilisec;
 }
 
+const setSliderTime = () => {
+  const fakeTime = store.getChemicalAccidentInfo().fakeTime;
+  const fakeDate = new Date();
+  fakeDate.setFullYear(fakeTime.year);
+  fakeDate.setMonth(fakeTime.month - 1);
+  fakeDate.setDate(fakeTime.day);
+  fakeDate.setHours(fakeTime.hour);
+  fakeDate.setMinutes(fakeTime.minute);
+  fakeDate.setSeconds(fakeTime.second);
+  let fakeStartUnixTimeMilisec = fakeDate.getTime();
+  let fakeStartDateTime = new Date(fakeStartUnixTimeMilisec + parseInt(timeTable.value.nowUnixTimeMilisec));
+  let fakeEndDateTime = new Date(fakeStartUnixTimeMilisec + timeTable.value.maxUnixTimeMilisec);
+  const timeInfo = toTimeFormat(fakeStartDateTime);
+  const endTimeInfo = toTimeFormat(fakeEndDateTime);
+  const timeInfoElement = document.getElementById('time-info');
+  if (timeInfoElement) {
+    timeInfoElement.innerText = `${timeInfo} / ${endTimeInfo}`;
+  }
+}
 
 const setTime = (snap = false) => {
   const animationTimeController = getAnimationTimeController();
@@ -170,8 +199,8 @@ const setTime = (snap = false) => {
   let currentDateTime = new Date(animationTimeController._currentUnixTimeMilisec);
   let endDateTime = new Date(startMilisec + timeTable.value.maxUnixTimeMilisec);
 
-  const timeInfo = toTimeFormat(currentDateTime);
-  const endTimeInfo = toTimeFormat(endDateTime);
+  //const timeInfo = toTimeFormat(currentDateTime);
+  //const endTimeInfo = toTimeFormat(endDateTime);
   let startJulianDate = Cesium.JulianDate.fromIso8601(startDateTime.toISOString())
   let currentJulianDate = Cesium.JulianDate.fromIso8601(currentDateTime.toISOString())
   let endJulianDate = Cesium.JulianDate.fromIso8601(endDateTime.toISOString())
@@ -183,10 +212,7 @@ const setTime = (snap = false) => {
   clock.currentTime = currentJulianDate
   clock.multiplier = 1
 
-  const timeInfoElement = document.getElementById('time-info');
-  if (timeInfoElement) {
-    timeInfoElement.innerText = `${timeInfo} / ${endTimeInfo}`;
-  }
+  setSliderTime();
 }
 
 const toTimeFormat = (date: Date) => {
@@ -199,6 +225,7 @@ const paddingZero = (num: number) => {
 
 onMounted(async () => {
   console.log('[MainComponent] Mounted Slider Component');
+  setSliderTime();
   /*window.addEventListener('message', (event) => {
     console.log(event);
     console.log("Message Received")
@@ -224,23 +251,23 @@ const getViewer = () => {
   <div id="speed-controller" class="">
     <div class="vertical">
       <label>
-        <input id="speed-1" type="radio" name="input-format" value="10" @click="setTimeScale(600000)" checked/>
+        <input id="speed-1" type="radio" name="input-format" value="10" @click="startTimeAnimation(600000)" checked/>
         <span>10분</span>
       </label>
       <label>
-        <input id="speed-2" type="radio" name="input-format" value="30"  @click="setTimeScale(1800000)"/>
+        <input id="speed-2" type="radio" name="input-format" value="30"  @click="startTimeAnimation(1800000)"/>
         <span>30분</span>
       </label>
       <label>
-        <input id="speed-3" type="radio" name="input-format" value="60"  @click="setTimeScale(3600000)"/>
+        <input id="speed-3" type="radio" name="input-format" value="60"  @click="startTimeAnimation(3600000)"/>
         <span>1시간</span>
       </label>
       <label>
-        <input id="speed-4" type="radio" name="input-format" value="180"  @click="setTimeScale(10800000)"/>
+        <input id="speed-4" type="radio" name="input-format" value="180"  @click="startTimeAnimation(10800000)"/>
         <span>3시간</span>
       </label>
       <label>
-        <input id="speed-5" type="radio" name="input-format" value="360"  @click="setTimeScale(21600000)"/>
+        <input id="speed-5" type="radio" name="input-format" value="360"  @click="startTimeAnimation(21600000)"/>
         <span>6시간</span>
       </label>
     </div>

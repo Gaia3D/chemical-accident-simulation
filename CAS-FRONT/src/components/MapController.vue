@@ -45,6 +45,11 @@ const flyTo = (lon: number, lat: number, height: number, duration: number = 1) =
   const viewer = getViewer()
   viewer.camera.flyTo({
     destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
+    orientation: {
+      heading: Cesium.Math.toRadians(0.0),
+      //pitch: Cesium.Math.toRadians(-90.0),
+      roll: 0.0,
+    },
     duration: duration
   });
 }
