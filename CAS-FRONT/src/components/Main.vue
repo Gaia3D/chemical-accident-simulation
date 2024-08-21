@@ -129,6 +129,13 @@ onMounted(async () => {
 
   viewer.value.scene.globe.depthTestAgainstTerrain = false;
   viewer.value.scene.globe.enableLighting = false;
+  viewer.value.scene.globe.dynamicAtmosphereLighting = false;
+  viewer.value.scene.globe.dynamicAtmosphereLightingFromSun = false;
+
+  const flashlight = new Cesium.DirectionalLight({
+    direction: viewer.value.camera.directionWC, // Updated every frame
+  });
+  viewer.value.scene.light = flashlight;
 
   const dateObject = new Date()
   const options = {
