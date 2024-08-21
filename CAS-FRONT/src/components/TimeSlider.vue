@@ -148,6 +148,7 @@ const stop = () => {
   const animationTimeController = getAnimationTimeController();
   timeTable.value.nowUnixTimeMilisec = 0;
   animationTimeController._currentUnixTimeMilisec = animationTimeController._animationStartUnixTimeMilisec;
+  setTime();
 }
 
 const setSliderTime = () => {
@@ -224,21 +225,8 @@ const paddingZero = (num: number) => {
 }
 
 onMounted(async () => {
-  console.log('[MainComponent] Mounted Slider Component');
+  //console.log('[MainComponent] Mounted Slider Component');
   setSliderTime();
-  /*window.addEventListener('message', (event) => {
-    console.log(event);
-    console.log("Message Received")
-
-    const data = event.data;
-    if (data) {
-      if (data.action === "play") {
-        play();
-      } else if (data.action === "stop") {
-        stop();
-      }
-    }
-  });*/
 });
 
 const getViewer = () => {

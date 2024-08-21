@@ -92,8 +92,8 @@ const loadAccidentInfo = (accidentId : string) => {
   }).then((response) => {
     return response.json()
   }).then((json) => {
-    console.log("json", json);
     json.accidentDttm = formatDate(json.accidentDttm);
+    json.leakAmount = parseFloat(json.leakAmount).toLocaleString('ko-KR',{maximumFractionDigits: 4, minimumFractionDigits: 1})
     store.getChemicalAccidentInfo().accidentInfo = json;
     chemicalAccidentInfo.value.accidentInfo = json;
   }).catch((error) => {
@@ -114,7 +114,6 @@ const loadChemicalInfo = (accidentId : string) => {
   }).then((json) => {
     store.getChemicalAccidentInfo().chemicalInfo = json;
     chemicalAccidentInfo.value.chemicalInfo = json;
-    console.log("json", json);
   }).catch((error) => {
     console.error("[ERROR] Failed to load accident info");
     console.error(error);
@@ -122,8 +121,7 @@ const loadChemicalInfo = (accidentId : string) => {
 }
 
 onMounted(async () => {
-  console.log('[MainComponent] Mounted Main Component');
-
+  //console.log('[MainComponent] Mounted Main Component');
   viewer.value = mapComponent.value.getViewer();
   magoInstance.value = mapComponent.value.getMagoInstance();
   transferViewer.value.viewer = viewer.value;

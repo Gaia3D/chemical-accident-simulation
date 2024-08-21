@@ -164,7 +164,7 @@ div.modal-dim {
 }
 
 h1 button.close {
-  padding: 2px;
+  padding: 3px;
 }
 
 .layer-contents {
@@ -255,4 +255,41 @@ div.switch-wrapper > label:has(input[type='checkbox']:checked) {
 }
 div.switch-wrapper > label:hover:has(input[type='checkbox']:checked) {
   background: var(--button-color-stress);
+}
+
+
+#legend-div {
+  display: block;
+  text-align: center;
+}
+
+#legend-div li {
+  cursor: pointer;
+  display: inline-block;
+  margin-right: 8px;
+}
+#legend-div li:last-child {
+  margin-right: 0;
+}
+
+#legend-div li > * {
+  vertical-align: middle;
+  display: inline-block;
+  margin-right: 4px;
+}
+#legend-div li > *:last-child {
+  margin-right: 0;
+}
+
+#legend-div li span {
+  width: 12px;
+  height: 12px;
+  border: 1px solid black;
+  border-radius: 16px;
+}
+#legend-div li p {
+  padding: 0;
+}
+#legend-div li input {
+  margin: 0;
 }

@@ -16,15 +16,15 @@ import "externals/cesium/Widget/Widget.css";
   const cesiumViewer = ref<any>();
 
   onMounted(() => {
-    console.log('[MapComponent] Mounted');
+    //console.log('[MapComponent] Mounted');
     Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
     const newMagoInstance = new Mago3D.Mago3d("mago3dContainer", {}, {loadend: () => {}}, props.initOptions);
     magoInstance.value = newMagoInstance;
     cesiumViewer.value = newMagoInstance.getViewer()
     cesiumViewer.value.scene.globe.depthTestAgainstTerrain = false;
     cesiumViewer.value.scene.globe.enableLighting = false;
-    console.log('[MapComponent] mago3dInstance', magoInstance);
-    console.log('[MapComponent] viewer', cesiumViewer);
+    //console.log('[MapComponent] mago3dInstance', magoInstance);
+    //console.log('[MapComponent] viewer', cesiumViewer);
   });
 
   const getViewer = () => {

@@ -35,7 +35,6 @@ const toggleAcuteHarm = () => {
 }
 
 watch(() => store.isShowChartWindow, (isShow) => {
-  //console.log('[MainComponent] Watch Chart Window', isShow);
   if (!personalTrackEntity.value) {
     return;
   }
@@ -43,7 +42,7 @@ watch(() => store.isShowChartWindow, (isShow) => {
 });
 
 onMounted(async () => {
-  console.log('[MainComponent] Mounted Chart Layer Component');
+  //console.log('[MainComponent] Mounted Chart Layer Component');
   layerState.value.isCas = true;
 });
 
@@ -78,7 +77,6 @@ const loadPersonalRiskData = (personalId : string) => {
   }).then((json) => {
     json.indiDamageGrade = getDamageGrade(json.indiDamageGrade);
     store.getChemicalAccidentInfo().personRiskInfo = json;
-    console.log(json);
   }).catch((error) => {
     console.error(error);
   })
@@ -159,9 +157,7 @@ const loadPersonalData = (personalId : string) => {
   }).then((response) => {
     return response.json()
   }).then((json) => {
-    console.log(json);
     drawTrackEntity(json);
-
     store.getChemicalAccidentInfo().personInfo = json;
     if (!json || json.length === 0) {
       console.error("[ERROR] No Data");
@@ -205,7 +201,7 @@ defineExpose({
   <div id="acute-harm" class="non-modal layer" v-show="layerState.acuteHarmInfo">
     <h1>
       개인별 피해등급(급성위해도) 산정기준
-      <button @click="toggleAcuteHarm()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
+      <button class="close" @click="toggleAcuteHarm()"><img class="icon" src="/src/assets/images/icons/close.png"></button>
     </h1>
     <div class="layer-contents">
       <table>
@@ -220,23 +216,23 @@ defineExpose({
         <tr>
           <td>고위험</td>
           <td>생명의 위협 또는 사망할 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level3) 초과 <br/> (AEGL-3 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl3Conc}}mg/m3)</td>
+          <td>급성 독성 참고치(Level3) 초과 <br/> (AEGL-3 10min : {{store.getChemicalAccidentInfo().chemicalInfo.aegl3Conc}}mg/m3)</td>
         </tr>
         <tr>
           <td>중위험</td>
           <td>비가역적 또는 심각하고, 지속가능한 장애 효과를 가져올 수 있는 피해 정도</td>
-          <td>급성 독성 참고치(Level2) 초과 <br/> (AEGL-2 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl2Conc}}mg/m3)</td>
+          <td>급성 독성 참고치(Level2) 초과 <br/> (AEGL-2 10min : {{store.getChemicalAccidentInfo().chemicalInfo.aegl2Conc}}mg/m3)</td>
         </tr>
         <tr>
           <td>저위험</td>
           <td>상당한 불쾌감, 자극, 어던 증상을 동반하지 않는 피해 정도</td>
-          <td>급성 독성 참고치(Level1) 초과 <br/> (AEGL-1 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl1Conc}}mg/m3)
+          <td>급성 독성 참고치(Level1) 초과 <br/> (AEGL-1 10min : {{store.getChemicalAccidentInfo().chemicalInfo.aegl1Conc}}mg/m3)
           </td>
         </tr>
         <tr>
           <td>해당없음</td>
           <td>피해 없음</td>
-          <td>급성 독성 참고치(Level1) 미만 <br/> (AEGL-1 10min : {{store.getChemicalAccidentInfo().personRiskInfo.aegl1Conc}}mg/m3)
+          <td>급성 독성 참고치(Level1) 미만 <br/> (AEGL-1 10min : {{store.getChemicalAccidentInfo().chemicalInfo.aegl1Conc}}mg/m3)
           </td>
         </tr>
         </tbody>
@@ -246,7 +242,7 @@ defineExpose({
   <div id="determining-chronic-layer" class="non-modal layer"  v-show="layerState.chronicInfo">
     <h1>
       개인별 만성피해 유무 산정기준
-      <button class="close" @click="toggleChronic()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
+      <button class="close" @click="toggleChronic()"><img class="icon" src="/src/assets/images/icons/close.png"></button>
     </h1>
     <div class="layer-contents">
       <table>
@@ -280,7 +276,7 @@ defineExpose({
     <h1>
       개인별 상세 피해규모 예측 차트
       <button class="close" @click="toggleLayer()">
-        <img class="icon" src="/src/assets/images/icons/minus.png">
+        <img class="icon" src="/src/assets/images/icons/close.png">
       </button>
     </h1>
     <div class="layer-contents">
