@@ -119,13 +119,20 @@ const drawTrackEntity = async (list : any[]) => {
         leadTime: 10,
         trailTime: 10000000,
         resolution: 5,
+        clampToGround: true,
       },
       billboard: {
         //image: "/src/assets/images/icons/man.png",
         image: "/data/icons/man.png",
         width: 32,
         height: 32,
-        pixelOffset : new Cesium.Cartesian2(0.0, -16),
+        pixelOffset : {
+          cartesian2 : [0.0, -16]
+        },
+        eyeOffset: {
+          cartesian: [0.0, 0.0, -10.0],
+        },
+        clampToGround: true,
       },
       position: {
         epoch: "2024-02-06T02:00:00Z",

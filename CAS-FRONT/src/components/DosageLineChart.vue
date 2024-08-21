@@ -12,6 +12,7 @@
 import { Line } from 'vue-chartjs';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import {store} from "../store/store";
 Chart.register(...registerables);
 Chart.register(annotationPlugin);
 
@@ -72,22 +73,36 @@ const htmlLegendPlugin = {
       const boxSpan = document.createElement('span');
       boxSpan.style.background = item.fillStyle;
       boxSpan.style.borderColor = item.strokeStyle;
-      /*boxSpan.style.borderWidth = item.lineWidth + 'px';
-      boxSpan.style.display = 'inline-block';
-      boxSpan.style.flexShrink = 0;
-      boxSpan.style.height = '20px';
-      boxSpan.style.marginRight = '10px';
-      boxSpan.style.width = '20px';*/
-      // Text
+
       const textContainer = document.createElement('p');
-      /*textContainer.style.color = item.fontColor;
-      textContainer.style.margin = 0;
-      textContainer.style.padding = 0;*/
       textContainer.style.textDecoration = item.hidden ? 'line-through' : '';
 
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.checked = !item.hidden;
+
+      let element = undefined;
+      if (item.text == "호흡 발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicRespCarcDamage;
+      } else if (item.text == "호흡 비발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicRespNoncarcDamage;
+      } else if (item.text == "섭취/토양 발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicSoilCarcDamage;
+      } else if (item.text == "섭취/토양 비발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicSoilNoncarcRisk;
+      }
+      if (element && element === "-") {
+        li.classList.add('disable-legend');
+        checkbox.disabled = true;
+        checkbox.checked = false;
+        item.hidden = true;
+
+        const tooltip = document.createElement('div');
+        tooltip.classList.add('legend-tooltip');
+        tooltip.textContent = '보고된 독성자료 없음';
+        li.appendChild(tooltip);
+      } else {
+        checkbox.checked = !item.hidden;
+      }
 
       const text = document.createTextNode(item.text);
       textContainer.appendChild(text);
@@ -121,6 +136,9 @@ const options = {
         stepSize: 1,
         autoSkip: true,
         maxTicksLimit: 49,
+        maxRotation: 90,
+        minRotation: 90,
+        precision: 1,
       },
       min: 0.0,
       max: 24 * 2 * 6,
@@ -128,7 +146,7 @@ const options = {
     y: {
       ticks: {
         callback: function(value, index, ticks) {
-          return value + '㎍';
+          return value;
         },
         font : {
           size: 9,
@@ -141,6 +159,17 @@ const options = {
     }
   },
   plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          console.log(context);
+          let label = context.dataset.label || '';
+          let value = context.dataset.data[context.label];
+          let text = `${label} : ${value}`;
+          return text;
+        }
+      }
+    },
     legend: {
       display: false,
       labels: {
@@ -153,6 +182,7 @@ const options = {
     htmlLegend: {
       containerID: 'legend-div',
     },
+
     /*annotation: {
       annotations: {
         line1: {
@@ -189,13 +219,6 @@ const data = {
   ],
 };
 
-data.datasets[0].data = data.datasets[0].data.map((value) => value * 1.1);
-data.datasets[1].data = data.datasets[1].data.map((value) => value * 2.4);
-data.datasets[2].data = data.datasets[2].data.map((value) => value * 1.7);
-data.datasets[3].data = data.datasets[3].data.map((value) => value * 2.8);
-
-// resize ratio
-
 export default {
   name: 'DosageLineChart',
   components: { Line },
@@ -218,24 +241,48 @@ export default {
   },
   methods: {
     initChartData() {
+
+/*
+      let hidden 0 = undefined;
+      if (item.text == "호흡 발암 노출량") {
+
+      } else if (item.text == "호흡 비발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicRespNoncarcDamage;
+      } else if (item.text == "섭취/토양 발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicSoilCarcDamage;
+      } else if (item.text == "섭취/토양 비발암 노출량") {
+        element = store.getChemicalAccidentInfo().personRiskInfo.chronicSoilNoncarcRisk;
+      }
+*/
+
+      let hidden0 = store.getChemicalAccidentInfo().personRiskInfo.chronicRespCarcDamage;
+      let hidden1 = store.getChemicalAccidentInfo().personRiskInfo.chronicRespNoncarcDamage;
+      let hidden2 = store.getChemicalAccidentInfo().personRiskInfo.chronicSoilCarcDamage;
+      let hidden3 = store.getChemicalAccidentInfo().personRiskInfo.chronicSoilNoncarcRisk;
+
+
       this.chartData = {
         labels: [],
         datasets: [
           {
             label: "호흡 발암 노출량",
             data: [],
+            hidden: hidden0 === "-",
           },
           {
             label: "호흡 비발암 노출량",
             data: [],
+            hidden: hidden1 === "-",
           },
           {
             label: "섭취/토양 발암 노출량",
             data: [],
+            hidden: hidden2 === "-",
           },
           {
             label: "섭취/토양 비발암 노출량",
             data: [],
+            hidden: hidden3 === "-",
           },
         ],
       };
@@ -243,12 +290,6 @@ export default {
     updateData() {
       if (this.personalData.json) {
         this.initChartData();
-        /*this.chartData.labels.length = [];
-        this.chartData.datasets[0].data.length = [];
-        this.chartData.datasets[1].data.length = [];
-        this.chartData.datasets[2].data.length = [];
-        this.chartData.datasets[3].data.length = [];*/
-
         let json = this.personalData.json;
         let length = json.length;
         for (let i = 0; i < length; i++) {

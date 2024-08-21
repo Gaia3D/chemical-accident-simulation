@@ -267,6 +267,7 @@ div.switch-wrapper > label:hover:has(input[type='checkbox']:checked) {
   cursor: pointer;
   display: inline-block;
   margin-right: 8px;
+  position: relative;
 }
 #legend-div li:last-child {
   margin-right: 0;
@@ -292,4 +293,34 @@ div.switch-wrapper > label:hover:has(input[type='checkbox']:checked) {
 }
 #legend-div li input {
   margin: 0;
+}
+
+#legend-div li.disable-legend {
+  cursor: default;
+}
+#legend-div li.disable-legend p {
+  color: #b0b0b0;
+}
+#legend-div li.disable-legend span {
+  border: 1px solid #b0b0b0;
+  opacity: 0.5;
+}
+#legend-div li.disable-legend input:disabled {
+  opacity: 0.5;
+}
+
+#legend-div li.disable-legend div.legend-tooltip {
+  display: none;
+  position: absolute;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  border: 1px solid #cbcbcb;
+  padding: 5px;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+  color: #4e4e4e;
+}
+#legend-div li.disable-legend:hover div.legend-tooltip {
+  display: block;
 }

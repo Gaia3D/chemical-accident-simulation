@@ -76,7 +76,8 @@ let playIntervalEvent: any = undefined;
 
 const prev = () => {
   const nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
-  let timeScale = parseInt(timeTable.value.timeScale);
+  //let timeScale = parseInt(timeTable.value.timeScale); // timeScale is not used
+  let timeScale = 600000;
   if (nowUnixTimeMilisec <= 3600000) {
     timeScale = 60000;
   }
@@ -91,8 +92,9 @@ const prev = () => {
 
 const next = () => {
   const nowUnixTimeMilisec = parseInt(timeTable.value.nowUnixTimeMilisec);
-  let timeScale = parseInt(timeTable.value.timeScale);
-  if (nowUnixTimeMilisec <= 3600000) {
+  //let timeScale = parseInt(timeTable.value.timeScale); // timeScale is not used
+  let timeScale = 600000;
+  if (nowUnixTimeMilisec < 3600000) {
     timeScale = 60000;
   }
   let remainValue = nowUnixTimeMilisec % timeScale;
@@ -238,6 +240,7 @@ const getViewer = () => {
 <template>
   <div id="speed-controller" class="">
     <div class="vertical">
+      <div class="speed-label">애니메이션 보기 : </div>
       <label>
         <input id="speed-1" type="radio" name="input-format" value="10" @click="startTimeAnimation(600000)" checked/>
         <span>10분</span>
@@ -257,6 +260,15 @@ const getViewer = () => {
       <label>
         <input id="speed-5" type="radio" name="input-format" value="360"  @click="startTimeAnimation(21600000)"/>
         <span>6시간</span>
+      </label>
+      <label v-show="!timeTable.isPlaying">
+        <span @click="play">시작</span>
+      </label>
+      <label v-show="timeTable.isPlaying">
+        <span @click="pause">멈춤</span>
+      </label>
+      <label>
+        <span @click="stop">정지</span>
       </label>
     </div>
   </div>
@@ -345,6 +357,11 @@ const getViewer = () => {
 
 <style scoped>
 
+.speed-label {
+  vertical-align: middle;
+  font-size: 11px;
+  font-weight: 400;
+}
 input[type=range] {
   cursor: pointer;
 }
@@ -353,7 +370,7 @@ input[type=radio] {
   display: none;
   opacity: 0.5;
 }
-span {
+input + span {
   display: inline-block;
   padding: 6px 12px;
   color: #a4a4a4;
@@ -363,6 +380,20 @@ span {
   cursor: pointer;
   font-size: 9px;
   font-weight: bold;
+}
+span {
+  display: inline-block;
+  padding: 6px 12px;
+  color: #444444;
+  /*border: 1px solid #c4c4c4;*/
+  background-color: #c9c9c9;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: bold;
+}
+span:hover {
+  background-color: #eeeeee;
 }
 label > input[type="radio"]:checked+span {
   /*border: 1px solid #444444;*/

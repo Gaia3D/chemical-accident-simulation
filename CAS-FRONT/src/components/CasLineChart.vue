@@ -109,6 +109,8 @@ const data = {
   ],
 };
 
+const scale = 1;
+
 const options = {
   responsive: true,
   maintainAspectRatio: false,
@@ -128,6 +130,7 @@ const options = {
         stepSize: 1,
         autoSkip: true,
         maxTicksLimit: 49,
+        precision: 1,
       },
       min: 0.0,
       max: 24 * 2 * 6,
@@ -135,19 +138,34 @@ const options = {
     y: {
       ticks: {
         callback: function(value, index, ticks) {
-          return (Math.round(value * 1000 * 10) / 10) + 'mg';
+          return (Math.round(value * scale * 10) / 10) + 'mg';
         },
         font : {
           size: 9,
         },
-        stepSize: 30.0 * 0.001,
+        stepSize: 30.0 / scale,
         precision: 2,
       },
       min: 0,
-      max: 150.0 * 0.001,
+      //max: 150.0 / scale,
     }
   },
   plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          console.log(context);
+          let label = context.dataset.label || '';
+          let value = context.dataset.data[context.label];
+
+          // microgram
+          //let text = `${label} : ${value}㎍/㎥`;
+          // milligram
+          let text = `${label} : ${parseFloat(value)} mg/㎥`;
+          return text;
+        }
+      }
+    },
     legend: {
       display: false,
       labels: {
@@ -272,24 +290,25 @@ export default {
         this.initChartData();
         this.initOptionsData();
 
+        const scale = 1;
 
         const aegl1 = parseFloat(store.getChemicalAccidentInfo().chemicalInfo.aegl1Conc);
         const aegl2 = parseFloat(store.getChemicalAccidentInfo().chemicalInfo.aegl2Conc);
         const aegl3 = parseFloat(store.getChemicalAccidentInfo().chemicalInfo.aegl3Conc);
 
-        this.chartOptions.plugins.annotation.annotations.line1.yMin = aegl1 * 0.001;
-        this.chartOptions.plugins.annotation.annotations.line1.yMax = aegl1 * 0.001;
-        this.chartOptions.plugins.annotation.annotations.label1.yValue = aegl1 * 0.001;
+        this.chartOptions.plugins.annotation.annotations.line1.yMin = aegl1 / scale;
+        this.chartOptions.plugins.annotation.annotations.line1.yMax = aegl1 / scale;
+        this.chartOptions.plugins.annotation.annotations.label1.yValue = aegl1 / scale;
         this.chartOptions.plugins.annotation.annotations.label1.content = [`저위험 수준 (AEGL-1 10min ${aegl1} mg/㎡) `];
 
-        this.chartOptions.plugins.annotation.annotations.line2.yMin = aegl2 * 0.001;
-        this.chartOptions.plugins.annotation.annotations.line2.yMax = aegl2 * 0.001;
-        this.chartOptions.plugins.annotation.annotations.label2.yValue = aegl2 * 0.001;
+        this.chartOptions.plugins.annotation.annotations.line2.yMin = aegl2 / scale;
+        this.chartOptions.plugins.annotation.annotations.line2.yMax = aegl2 / scale;
+        this.chartOptions.plugins.annotation.annotations.label2.yValue = aegl2 / scale;
         this.chartOptions.plugins.annotation.annotations.label2.content = [`중위험 수준 (AEGL-2 10min ${aegl2} mg/㎡)`];
 
-        this.chartOptions.plugins.annotation.annotations.line3.yMin = aegl3 * 0.001;
-        this.chartOptions.plugins.annotation.annotations.line3.yMax = aegl3 * 0.001;
-        this.chartOptions.plugins.annotation.annotations.label3.yValue = aegl3 * 0.001;
+        this.chartOptions.plugins.annotation.annotations.line3.yMin = aegl3 / scale;
+        this.chartOptions.plugins.annotation.annotations.line3.yMax = aegl3 / scale;
+        this.chartOptions.plugins.annotation.annotations.label3.yValue = aegl3 / scale;
         this.chartOptions.plugins.annotation.annotations.label3.content = [`고위험 수준 (AEGL-3 10min ${aegl3} mg/㎡)`];
 
 
@@ -308,7 +327,10 @@ export default {
             value = 0;
           }
 
-          this.chartData.datasets[0].data[time] = value;
+          if (value < 0.00000001) {
+            value = 0;
+          }
+          this.chartData.datasets[0].data[time] = value / 1000;
         }
       }
     }

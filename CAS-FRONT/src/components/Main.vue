@@ -185,7 +185,14 @@ onMounted(async () => {
         } else {
           console.error("[ERROR] No Detail Data");
         }
-      }  else {
+      } else if (data.action === "samplingCount") {
+        if (data.detail) {
+          const magoManager = magoInstance.value.getMagoManager();
+          const chemicalAccidentManager = magoManager.chemicalAccidentManager;
+          const chemicalAccidentLayer = chemicalAccidentManager.getChemicalAccidentLayer(0);
+          chemicalAccidentLayer.setVolumetricSamplingsCount(data.detail.samplingCount);
+        }
+      } else {
         console.error("[ERROR] Unknown Action");
       }
     } else {

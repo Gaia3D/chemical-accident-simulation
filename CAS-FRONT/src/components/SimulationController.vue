@@ -130,6 +130,7 @@ const loadSimulations = () => {
     if (magoManager.chemicalAccidentManager.isReady() && magoManager.chemicalAccident2dManager.isReady()) {
       clearInterval(interval);
       store.hideLoading();
+      startChemicalAccident3d();
     } else {
       console.log("[SimulationController] 시뮬레이션 데이터 로드 중...");
     }
@@ -245,15 +246,14 @@ const setLegendTable = (legendTitle : string, legendColors : any[], scale : numb
     let index = legendColors.length - i - 1;
     let legend = legendColors[index];
     let contextValue;
-    if (scale === 1.0) {
+    if (scale == 1.0) {
       contextValue = legend.value;
     } else {
       contextValue = (parseFloat(legend.value) / scale).toFixed(10);
     }
 
-    let context = "";
-    context = contextValue;
-    let alpha = legend.alpha < 0.3 ? 0.3 : legend.alpha;
+    let context = contextValue;
+    let alpha = 0.5;
     let color = "rgba(" + (legend.red * 255) + ", " + (legend.green * 255) + ", " + (legend.blue * 255) + ", " + alpha + ")";
     legendList.value.list.push({
       index : i,
@@ -307,14 +307,56 @@ const setLegendTableForAcuteCriticality = (legendTitle : string, legendColors : 
   //legendList.value.list.reverse();
 }
 
+
+/* @ts-ignore */
+const getLinearLegendColors = () => {
+  const minValue = 0;
+  const maxValue = 112000000.0
+  const numColors = 12;
+  const alpha = 0.5;
+  const legendColors = [];
+
+  const valueRange = maxValue - minValue;
+  const step = valueRange / numColors;
+
+  let legendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.1, 0);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, 0.2, step);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, 0.3, step * 2);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, 0.4, step * 3);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, alpha, step * 4);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, alpha, step * 5);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(159/255, 255/255, 95/255, alpha, step * 6);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(239/255, 255/255, 15/255, alpha, step * 7);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(255/255, 191/255, 0/255, alpha, step * 8);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(255/255, 111/255, 0/255, alpha, step * 9);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(255/255, 31/255, 0/255, alpha, step * 10);
+  legendColors.push(legendColor);
+  legendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, alpha, step * 11);
+  legendColors.push(legendColor);
+
+  return legendColors;
+}
+
+
 const get3DLegendColors = (scale : number) => {
   const legendValuesScale = scale;
   const minValue = 0;
   const maxValue = 112000000.0 * legendValuesScale;
+  //const maxValue = 1620000.0 * legendValuesScale;
   const numColors = 12;
   const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-  const accentuationFactorAlpha = 3.0;
+  const accentuationFactorAlpha = 2.5;
   const alphaValues = getLogDivisions(0.0, 1.0, numColors, accentuationFactorAlpha);
 
   const legendColors = [];
@@ -342,6 +384,8 @@ const get3DLegendColors = (scale : number) => {
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, alphaValues[11], legendValues[11]);  // 11
   legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 0/255, alphaValues[12], legendValues[12]);  // 11
+  legendColors.push(LegendColor);
 
   return legendColors;
 }
@@ -351,7 +395,7 @@ const get2DLegendColors = (scale: number) => {
   const minValue = 0;
   const maxValue = 1620000.0 * legendValuesScale;
   const numColors = 12;
-  const accentuationFactor = 8.0;
+  const accentuationFactor = 3.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
 
   const legendColors = [];
@@ -380,6 +424,9 @@ const get2DLegendColors = (scale: number) => {
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, alphaColor, legendValues[11]);  // 11
   legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 0/255, alphaColor, legendValues[12]);  // 11
+  legendColors.push(LegendColor);
+
   return legendColors;
 }
 
