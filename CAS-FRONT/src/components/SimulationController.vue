@@ -163,6 +163,8 @@ const load3dSimulation = () => {
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
 
     magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e8));
+    magoManager.chemicalAccidentManager.setLegendColors(getLinearLegendColors());
+
     magoManager.chemicalAccidentManager.setLegendValuesScale(1e8);
     magoManager.chemicalAccidentManager.hide();
   }
@@ -249,7 +251,8 @@ const setLegendTable = (legendTitle : string, legendColors : any[], scale : numb
     if (scale == 1.0) {
       contextValue = legend.value;
     } else {
-      contextValue = (parseFloat(legend.value) / scale).toFixed(10);
+      //contextValue = (parseFloat(legend.value) / scale).toFixed(10);
+      contextValue = (parseFloat(legend.value) / scale).toExponential(4);
     }
 
     let context = contextValue;
@@ -487,9 +490,10 @@ const startChemicalAccident3d = () => {
       alert("레이어가 준비되지 않았습니다.");
       return;
     }
-    chemicalAccidentLayer.setUseMinMaxValuesToRender(0)
+    chemicalAccidentLayer.setUseMinMaxValuesToRender(1)
 
     setLegendTable("농도", get3DLegendColors(1e8), 1e8, "(μg/㎥)")
+    //setLegendTable("농도", getLinearLegendColors(), 1, "(μg/㎥)")
   }
 }
 
@@ -656,7 +660,7 @@ defineExpose({
         </label>
       </div>
       <div class="switch-wrapper">
-        <h4>사고물질 농도 (2D)</h4>
+        <h4>사고물질 농도 (10m)</h4>
         <label>
           <input type="radio" name="accident-group" v-model="layerState.selectedAccident" value="chemicalAccident2d" @click="startChemicalAccident2d()">
           <span></span>
