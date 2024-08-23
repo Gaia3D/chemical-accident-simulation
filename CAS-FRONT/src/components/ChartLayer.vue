@@ -18,6 +18,7 @@ const layerState = ref({
   acuteHarmInfo : false,
   isCas: false,
   isDosage: false,
+  showChartContent: true,
 });
 
 const personalTrackEntity : any = ref(undefined);
@@ -212,7 +213,8 @@ const selectDosage = () => {
 }
 
 const toggleLayer = () => {
-  store.toggleChartWindow();
+  //store.toggleChartWindow();
+  layerState.value.showChartContent = !layerState.value.showChartContent;
 }
 
 const getViewer = () => {
@@ -305,9 +307,8 @@ defineExpose({
   <div id="chart-layer" class="layer left top" v-show="store.isShowChartWindow">
     <h1>
       개인별 상세 피해규모 예측 차트
-      <button class="close" @click="toggleLayer()">
-        <img class="icon" src="/src/assets/images/icons/close.png">
-      </button>
+      <button class="close" @click="toggleLayer()" v-show="layerState.showChartContent"><img class="icon" src="/src/assets/images/icons/drop-down.png"></button>
+      <button class="close" @click="toggleLayer()" v-show="!layerState.showChartContent"><img class="icon" src="/src/assets/images/icons/drop-up.png"></button>
     </h1>
     <div class="layer-contents">
       <div class="chart-info">
@@ -355,7 +356,7 @@ defineExpose({
           <img class="icon" src="/src/assets/images/icons/info.png">
         </button>
       </div>
-      <div class="layer-tab">
+      <div class="layer-tab" v-show="layerState.showChartContent">
         <div @click="selectCas()" v-bind:class="layerState.isCas ? 'selected' : ''">
           개인피해등급(급성위해도)
         </div>
@@ -363,10 +364,10 @@ defineExpose({
           노출량
         </div>
       </div>
-      <div class="chemical-info">
+      <div class="chemical-info" v-show="layerState.showChartContent">
         {{store.getChemicalAccidentInfo().chemicalInfo.chemicalNm}}({{store.getChemicalAccidentInfo().chemicalInfo.chemicalEngNm}})
       </div>
-      <div class="layer-body">
+      <div class="layer-body" v-show="layerState.showChartContent">
         <div class="layer-wrap" v-show="layerState.isCas">
           <CasLineChart ref="lineChart" :personalData="personalData"/>
         </div>

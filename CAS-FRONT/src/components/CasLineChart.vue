@@ -163,14 +163,13 @@ const options = {
     tooltip: {
       callbacks: {
         label: function(context) {
-          console.log(context);
           let label = context.dataset.label || '';
           let value = context.dataset.data[context.label];
 
           // microgram
           //let text = `${label} : ${value}㎍/㎥`;
           // milligram
-          let text = `${label} : ${parseFloat(value)} mg/㎥`;
+          let text = `${label} : ${parseFloat(value).toExponential(2)} mg/㎥`;
           return text;
         }
       }

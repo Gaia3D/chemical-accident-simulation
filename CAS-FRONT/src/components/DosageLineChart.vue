@@ -153,7 +153,7 @@ const options = {
       ticks: {
         callback: function(value, index, ticks) {
           let scaledValue = value.toExponential(2);
-          return scaledValue;
+          return scaledValue + " mg/kg/day";
         },
         font : {
           size: 9,
@@ -172,7 +172,7 @@ const options = {
           console.log(context);
           let label = context.dataset.label || '';
           let value = context.dataset.data[context.label];
-          let text = `${label} : ${value}`;
+          let text = `${label} : ${value} mg/kg/day`;
           return text;
         }
       }
@@ -189,18 +189,6 @@ const options = {
     htmlLegend: {
       containerID: 'legend-div',
     },
-
-    /*annotation: {
-      annotations: {
-        line1: {
-          type: 'line',
-          yMin: 0.5,
-          yMax: 0.5,
-          borderColor: 'rgb(255, 99, 132)',
-          borderWidth: 2,
-        }
-      }
-    }*/
   }
 }
 

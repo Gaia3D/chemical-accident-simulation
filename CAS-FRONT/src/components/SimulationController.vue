@@ -162,10 +162,10 @@ const load3dSimulation = () => {
     magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
 
-    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e8));
+    magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e10));
     //magoManager.chemicalAccidentManager.setLegendColors(getLinearLegendColors());
 
-    magoManager.chemicalAccidentManager.setLegendValuesScale(1e8);
+    magoManager.chemicalAccidentManager.setLegendValuesScale(1e10);
     magoManager.chemicalAccidentManager.hide();
   }
 }
@@ -190,7 +190,8 @@ const load2dSimulation = () => {
     textureFlipYAxis : true
   };
   let accidentLayerA = new Mago3D.ChemicalAccident2DLayer(optionsA);
-  accidentLayerA.setLegendColors(get2DLegendColors(1e8));
+  accidentLayerA.setLegendColors(get2DLegendColors(1e10));
+  accidentLayerA.setLegendValuesScale(1e10);
   accidentLayerA.hide();
 
   magoManager.chemicalAccident2dManager.addChemAccidentLayer2D(accidentLayerA);
@@ -241,7 +242,7 @@ const getLogDivisions = (minValue : number, maxValue : number, numberOfColors : 
   return divisions;
 }
 
-const setLegendTable = (legendTitle : string, legendColors : any[], scale : number = 1.0, unit : string) => {
+const setLegendTable = (legendTitle : string, legendColors : any[], scale : number = 1.0, unit : string, legendReference : string = "") => {
   legendList.value.list.length = 0;
   let cssLinearGradient = "linear-gradient(";
   for (let i = 0; i < legendColors.length; i++) {
@@ -269,7 +270,11 @@ const setLegendTable = (legendTitle : string, legendColors : any[], scale : numb
   legendList.value.title = legendTitle;
   legendList.value.unit = unit;
   legendList.value.cssLinearGradient = cssLinearGradient;
-  legendList.value.legendReference = undefined;
+  if (legendReference != "") {
+    legendList.value.legendReference = legendReference;
+  } else {
+    legendList.value.legendReference = undefined;
+  }
 }
 
 const getDamageGrade = (grade : string) => {
@@ -350,16 +355,61 @@ const getLinearLegendColors = () => {
   return legendColors;
 }
 
-
 const get3DLegendColors = (scale : number) => {
   const legendValuesScale = scale;
   const minValue = 0;
-  const maxValue = 112000000.0 * legendValuesScale;
-  //const maxValue = 1620000.0 * legendValuesScale;
+  //const maxValue = 112000000.0 * legendValuesScale;
+  const maxValue = 200000000.0 * legendValuesScale;
+  //const maxValue = 112000000.0 * legendValuesScale;
   const numColors = 12;
   const accentuationFactor = 1.0;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
-  const accentuationFactorAlpha = 2.5;
+  //const accentuationFactorAlpha = 1.0;
+  //const alphaValues = getLogDivisions(0.0, 1.0, numColors, accentuationFactorAlpha);
+
+  let alphaColor = 0.1;
+  const legendColors = [];
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, alphaColor * 0.1, legendValues[0]);  // 0
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, alphaColor * 0.2, legendValues[1]);  // 1
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, alphaColor * 0.3, legendValues[2]);  // 2
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, alphaColor * 0.4, legendValues[3]);  // 3
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, alphaColor * 0.5, legendValues[4]);  // 4
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, alphaColor * 0.6, legendValues[5]);  // 5
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(159/255, 255/255, 95/255, alphaColor * 0.7, legendValues[6]);  // 6
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(239/255, 255/255, 15/255, alphaColor * 0.8, legendValues[7]);  // 7
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 191/255, 0/255, alphaColor * 0.9, legendValues[8]);  // 8
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 111/255, 0/255, alphaColor, legendValues[9]);  // 9
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(255/255, 31/255, 0/255, alphaColor, legendValues[10]);  // 10
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(207/255, 0/255, 0/255, alphaColor, legendValues[11]);  // 11
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 0/255, alphaColor, legendValues[12]);  // 11
+  legendColors.push(LegendColor);
+
+  return legendColors;
+}
+
+
+
+/*const get3DLegendColors = (scale : number) => {
+  const legendValuesScale = scale;
+  const minValue = 0;
+  //const maxValue = 112000000.0 * legendValuesScale;
+  const maxValue = 112000000.0 * legendValuesScale;
+  const numColors = 12;
+  const accentuationFactor = 1.0;
+  const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
+  const accentuationFactorAlpha = 1.0;
   const alphaValues = getLogDivisions(0.0, 1.0, numColors, accentuationFactorAlpha);
 
   const legendColors = [];
@@ -391,27 +441,29 @@ const get3DLegendColors = (scale : number) => {
   legendColors.push(LegendColor);
 
   return legendColors;
-}
+}*/
 
 const get2DLegendColors = (scale: number) => {
   const legendValuesScale = scale;
   const minValue = 0;
-  const maxValue = 1620000.0 * legendValuesScale;
+  //const maxValue = 1620000.0 * legendValuesScale;
+  const maxValue = 200000000.0 * legendValuesScale;
+  //const maxValue = 1620000.0 * legendValuesScale;
   const numColors = 12;
-  const accentuationFactor = 3.0;
+  const accentuationFactor = 0.5;
   const legendValues = getLogDivisions(minValue, maxValue, numColors, accentuationFactor);
 
   const legendColors = [];
   let alphaColor = 0.5;
-  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, 0.0, legendValues[0]);  // 0
+  let LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 143/255, alphaColor * 0.0, legendValues[0]);  // 0
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, alphaColor, legendValues[1]);  // 1
+  LegendColor = new Mago3D.ColorLegend(0/255, 15/255, 255/255, alphaColor * 0.6, legendValues[1]);  // 1
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, alphaColor, legendValues[2]);  // 2
+  LegendColor = new Mago3D.ColorLegend(0/255, 95/255, 255/255, alphaColor * 0.7, legendValues[2]);  // 2
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, alphaColor, legendValues[3]);  // 3
+  LegendColor = new Mago3D.ColorLegend(0/255, 175/255, 255/255, alphaColor * 0.8, legendValues[3]);  // 3
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, alphaColor, legendValues[4]);  // 4
+  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 255/255, alphaColor * 0.9, legendValues[4]);  // 4
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(79/255, 255/255, 175/255, alphaColor, legendValues[5]);  // 5
   legendColors.push(LegendColor);
@@ -449,40 +501,26 @@ const getAcuteCriticalityLegendColors = () => {
 
 const getVictimDistributionLegendColors = () => {
   const legendColors = [];
-  let alphaColor = 0.5;
-  /*let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.0, 0.0);
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 255/255, alphaColor, 1.0);
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 127/255, 255/255, alphaColor, 2.0);
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(0/255, 255/255, 127/255, alphaColor, 3.0);
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 0/255, alphaColor, 6.0);
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 127/255, 0/255, alphaColor, 9.0);
-  legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, alphaColor, 12.0);
-  legendColors.push(LegendColor);*/
 
   let count = 7;
   let step = 255 / count;
-
+  let alphaColor = 0.5;
 
   let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.0, 0.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend((step * 6)/255, 0/255, 0/255, 0.1, 1.0);
+  LegendColor = new Mago3D.ColorLegend((step * 6)/255, 0/255, 0/255, alphaColor, 1.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend((step * 5)/255, 0/255, 0/255, 0.3, 2.0);
+  LegendColor = new Mago3D.ColorLegend((step * 5)/255, 0/255, 0/255, alphaColor, 2.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend((step * 4)/255, 0/255, 0/255, 0.5, 3.0);
+  LegendColor = new Mago3D.ColorLegend((step * 4)/255, 0/255, 0/255, alphaColor, 3.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend((step * 3)/255, 0/255, 0/255, 0.7, 6.0);
+  LegendColor = new Mago3D.ColorLegend((step * 3)/255, 0/255, 0/255, alphaColor, 6.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend((step * 2)/255, 0/255, 0/255, 0.9, 9.0);
+  LegendColor = new Mago3D.ColorLegend((step * 2)/255, 0/255, 0/255, alphaColor, 9.0);
   legendColors.push(LegendColor);
-  LegendColor = new Mago3D.ColorLegend((step)/255, 0/255, 0/255, 1.0, 12.0);
+  LegendColor = new Mago3D.ColorLegend((step)/255, 0/255, 0/255, alphaColor, 12.0);
   legendColors.push(LegendColor);
+
   return legendColors;
 }
 
@@ -511,7 +549,7 @@ const startChemicalAccident3d = () => {
     }
     chemicalAccidentLayer.setUseMinMaxValuesToRender(0)
 
-    setLegendTable("농도", get3DLegendColors(1e8), 1e11, "(mg/㎥)")
+    setLegendTable("농도", get3DLegendColors(1e10), 1e13, "(mg/㎥)", "고도 : 10~3,000m")
     //setLegendTable("농도", getLinearLegendColors(), 1, "(μg/㎥)")
   }
 }
@@ -534,7 +572,7 @@ const startChemicalAccident2d = () => {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
     layer.show();
 
-    setLegendTable("농도", get2DLegendColors(1e8), 1e11, "(mg/㎥)")
+    setLegendTable("농도", get2DLegendColors(1e10), 1e13, "(mg/㎥)", "고도 : 0~10m")
 
   }
 }
@@ -605,7 +643,7 @@ const startVictimMovement = () => {
   layerState.value.victimMovement = true;
   layerState.value.selectedVictim = "victimMovement";
 
-  setLegendTable("", [], 1, "")
+  //setLegendTable("", [], 1, "")
   trackEntities.forEach((entity) => {
     entity.show = true;
   });
@@ -614,7 +652,7 @@ const startVictimMovement = () => {
 const startPersonalMovement = () => {
   stopAllVictim();
   layerState.value.selectedVictim = "personalMovement";
-  setLegendTable("", [], 1, "")
+  //setLegendTable("", [], 1, "")
 }
 
 const stopAllVictim = () => {
@@ -667,7 +705,8 @@ defineExpose({
   <div id="simulation-layer" class="layer left top horizontal">
     <h1>
       레이어
-      <button class="close" @click="toggleLayer()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
+      <button class="close" @click="toggleLayer()" v-show="!layerState.layer"><img class="icon" src="/src/assets/images/icons/drop-down.png"></button>
+      <button class="close" @click="toggleLayer()" v-show="layerState.layer"><img class="icon" src="/src/assets/images/icons/drop-up.png"></button>
     </h1>
     <div class="layer-contents horizontal" v-show="layerState.layer">
       <h3>사고물질 레이어</h3>
@@ -741,12 +780,13 @@ defineExpose({
       </div>
     </div>
   </div>
-  <div id="legend-layer" class="layer left top horizontal" v-if="legendList.list.length > 0">
+  <div id="legend-layer" class="layer left top horizontal">
     <h1>
       범례
-      <button class="close" @click="toggleLegend()"><img class="icon" src="/src/assets/images/icons/minus.png"></button>
+      <button class="close" @click="toggleLegend()" v-show="!layerState.legend"><img class="icon" src="/src/assets/images/icons/drop-down.png"></button>
+      <button class="close" @click="toggleLegend()" v-show="layerState.legend"><img class="icon" src="/src/assets/images/icons/drop-up.png"></button>
     </h1>
-    <div class="layer-contents horizontal">
+    <div class="layer-contents horizontal" v-show="layerState.legend">
       <span class="legend-unit" v-if="legendList.list.length > 0">{{legendList.unit}}</span>
       <h3 v-if="legendList.list.length > 0">{{legendList.title}}</h3>
       <div class="legend-wrap" v-show="legendList.list.length > 0">
@@ -756,7 +796,7 @@ defineExpose({
             <option v-for= "legend in legendList.list" :key="legend.index">{{legend.context}}</option>
           </datalist>
         </div>
-        <div class="legend-ref" v-show="legendList.legendReference">ref: {{legendList.legendReference}}</div>
+        <div class="legend-ref" v-show="legendList.legendReference">{{legendList.legendReference}}</div>
       </div>
     </div>
   </div>

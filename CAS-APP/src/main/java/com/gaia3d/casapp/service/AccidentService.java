@@ -53,10 +53,6 @@ public class AccidentService {
             ProjCoordinate utmkCoordinate = new ProjCoordinate(utmkX, utmkY);
             ProjCoordinate wgsCoordinate = new ProjCoordinate();
             transformer.transform(utmkCoordinate, wgsCoordinate);
-
-            log.info("UTMK 좌표: {}, {}", utmkX, utmkY);
-            log.info("경위도 좌표: {}, {}", wgsCoordinate.x, wgsCoordinate.y);
-
             personalLocationInfo.setUtmkX(wgsCoordinate.x);
             personalLocationInfo.setUtmkY(wgsCoordinate.y);
         });
