@@ -93,7 +93,7 @@ const loadAccidentInfo = (accidentId : string) => {
     return response.json()
   }).then((json) => {
     json.accidentDttm = formatDate(json.accidentDttm);
-    json.leakAmount = parseFloat(json.leakAmount).toLocaleString('ko-KR',{maximumFractionDigits: 4, minimumFractionDigits: 1})
+    json.leakAmount = parseFloat(json.leakAmount).toLocaleString('ko-KR',{maximumFractionDigits: 4, minimumFractionDigits: 0})
     store.getChemicalAccidentInfo().accidentInfo = json;
     chemicalAccidentInfo.value.accidentInfo = json;
   }).catch((error) => {

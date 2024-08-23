@@ -63,6 +63,26 @@ const getDamageGrade = (grade : string) => {
   }
 }
 
+const getDamageType = (grade : string) => {
+  //피해있음, 피해없음, 보고된 독성자료 없음
+  switch (grade) {
+    case 'O':
+      return '피해있음';
+    case 'X':
+      return '피해없음';
+    default:
+      return '보고된 독성자료 없음';
+  }
+}
+
+const getDamageValue = (value : string) => {
+  if (value === '-') {
+    return '';
+  }
+  const valueNum = parseFloat(value).toExponential(2);
+  return `(${valueNum})`;
+}
+
 const loadPersonalRiskData = (personalId : string) => {
   const chemicalAccidentInfo = store.getChemicalAccidentInfo();
   const accidentId = chemicalAccidentInfo.accidentInfo.accidentNo;
@@ -76,6 +96,9 @@ const loadPersonalRiskData = (personalId : string) => {
     return response.json()
   }).then((json) => {
     json.indiDamageGrade = getDamageGrade(json.indiDamageGrade);
+
+
+
     store.getChemicalAccidentInfo().personRiskInfo = json;
   }).catch((error) => {
     console.error(error);
@@ -305,10 +328,28 @@ defineExpose({
           만성 위해도 :
         </div>
         <div>
-          호흡-발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicRespCarcDamage}} ({{store.getChemicalAccidentInfo().personRiskInfo.chronicExpSoilIngnoncarc}}) <br> 호흡-비발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicRespNoncarcDamage}} ({{store.getChemicalAccidentInfo().personRiskInfo.chronicExposureAmt}})
+          호흡-발암 위해유무 :
+          <span>
+            {{getDamageType(store.getChemicalAccidentInfo().personRiskInfo.chronicRespCarcDamage)}}
+          </span>
+          {{getDamageValue(store.getChemicalAccidentInfo().personRiskInfo.chronicHazardInhcarc)}}
+          <br> 호흡-비발암 위해유무 :
+          <span>
+            {{getDamageType(store.getChemicalAccidentInfo().personRiskInfo.chronicRespNoncarcDamage)}}
+          </span>
+          {{getDamageValue(store.getChemicalAccidentInfo().personRiskInfo.chronicHazardIndex)}}
         </div>
         <div>
-          섭취/토양-발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicSoilCarcDamage}} ({{ store.getChemicalAccidentInfo().personRiskInfo.chronicExpSoilIngcarc }}) <br> 섭취/토양-비발암 위해유무 : {{store.getChemicalAccidentInfo().personRiskInfo.chronicSoilNoncarcRisk}} ({{store.getChemicalAccidentInfo().personRiskInfo.chronicExpSoilIngnoncarc}})
+          섭취/토양-발암 위해유무 :
+          <span>
+            {{getDamageType(store.getChemicalAccidentInfo().personRiskInfo.chronicSoilCarcDamage)}}
+          </span>
+          {{getDamageValue(store.getChemicalAccidentInfo().personRiskInfo.chronicHazardSoilIngcarc)}}
+          <br> 섭취/토양-비발암 위해유무 :
+          <span>
+            {{getDamageType(store.getChemicalAccidentInfo().personRiskInfo.chronicSoilNoncarcRisk)}}
+          </span>
+          {{getDamageValue(store.getChemicalAccidentInfo().personRiskInfo.chronicHazardSoilIngnoncarc)}}
         </div>
         <button class="info" @click="toggleChronic()">
           <img class="icon" src="/src/assets/images/icons/info.png">
@@ -321,9 +362,9 @@ defineExpose({
         <div @click="selectDosage()" v-bind:class="layerState.isDosage ? 'selected' : ''">
           노출량
         </div>
-        <div class="chemical-info">
-          {{store.getChemicalAccidentInfo().chemicalInfo.chemicalNm}}({{store.getChemicalAccidentInfo().chemicalInfo.chemicalEngNm}})
-        </div>
+      </div>
+      <div class="chemical-info">
+        {{store.getChemicalAccidentInfo().chemicalInfo.chemicalNm}}({{store.getChemicalAccidentInfo().chemicalInfo.chemicalEngNm}})
       </div>
       <div class="layer-body">
         <div class="layer-wrap" v-show="layerState.isCas">
@@ -339,10 +380,11 @@ defineExpose({
 <style scoped>
 .chemical-info {
   position: relative;
-  right: 0;
-  float: right;
-  padding: 8px !important;
+  float: left;
+  padding: 8px 12px !important;
   background: unset !important;
+  font-size: 10px;
+  font-weight: 500;
 }
 
 #chart-layer {
@@ -363,7 +405,7 @@ defineExpose({
   line-height: 18px;
 }
 .chart-info > div > span {
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .vertical-line {
@@ -379,7 +421,7 @@ defineExpose({
   border-radius: 0 10px 10px 10px;
 }
 .layer-wrap {
-  height: 150px;
+  height: 180px;
 }
 
 .layer-tab {

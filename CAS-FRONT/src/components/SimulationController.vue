@@ -163,7 +163,7 @@ const load3dSimulation = () => {
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
 
     magoManager.chemicalAccidentManager.setLegendColors(get3DLegendColors(1e8));
-    magoManager.chemicalAccidentManager.setLegendColors(getLinearLegendColors());
+    //magoManager.chemicalAccidentManager.setLegendColors(getLinearLegendColors());
 
     magoManager.chemicalAccidentManager.setLegendValuesScale(1e8);
     magoManager.chemicalAccidentManager.hide();
@@ -252,7 +252,7 @@ const setLegendTable = (legendTitle : string, legendColors : any[], scale : numb
       contextValue = legend.value;
     } else {
       //contextValue = (parseFloat(legend.value) / scale).toFixed(10);
-      contextValue = (parseFloat(legend.value) / scale).toExponential(4);
+      contextValue = (parseFloat(legend.value) / scale).toExponential(2);
     }
 
     let context = contextValue;
@@ -450,7 +450,7 @@ const getAcuteCriticalityLegendColors = () => {
 const getVictimDistributionLegendColors = () => {
   const legendColors = [];
   let alphaColor = 0.5;
-  let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.0, 0.0);
+  /*let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.0, 0.0);
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(0/255, 0/255, 255/255, alphaColor, 1.0);
   legendColors.push(LegendColor);
@@ -463,6 +463,25 @@ const getVictimDistributionLegendColors = () => {
   LegendColor = new Mago3D.ColorLegend(255/255, 127/255, 0/255, alphaColor, 9.0);
   legendColors.push(LegendColor);
   LegendColor = new Mago3D.ColorLegend(255/255, 0/255, 0/255, alphaColor, 12.0);
+  legendColors.push(LegendColor);*/
+
+  let count = 7;
+  let step = 255 / count;
+
+
+  let LegendColor = new Mago3D.ColorLegend(255/255, 255/255, 255/255, 0.0, 0.0);
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend((step * 6)/255, 0/255, 0/255, 0.1, 1.0);
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend((step * 5)/255, 0/255, 0/255, 0.3, 2.0);
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend((step * 4)/255, 0/255, 0/255, 0.5, 3.0);
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend((step * 3)/255, 0/255, 0/255, 0.7, 6.0);
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend((step * 2)/255, 0/255, 0/255, 0.9, 9.0);
+  legendColors.push(LegendColor);
+  LegendColor = new Mago3D.ColorLegend((step)/255, 0/255, 0/255, 1.0, 12.0);
   legendColors.push(LegendColor);
   return legendColors;
 }
@@ -490,9 +509,9 @@ const startChemicalAccident3d = () => {
       alert("레이어가 준비되지 않았습니다.");
       return;
     }
-    chemicalAccidentLayer.setUseMinMaxValuesToRender(1)
+    chemicalAccidentLayer.setUseMinMaxValuesToRender(0)
 
-    setLegendTable("농도", get3DLegendColors(1e8), 1e8, "(μg/㎥)")
+    setLegendTable("농도", get3DLegendColors(1e8), 1e11, "(mg/㎥)")
     //setLegendTable("농도", getLinearLegendColors(), 1, "(μg/㎥)")
   }
 }
@@ -515,7 +534,7 @@ const startChemicalAccident2d = () => {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(0);
     layer.show();
 
-    setLegendTable("농도", get2DLegendColors(1e8), 1e8, "(μg/㎥)")
+    setLegendTable("농도", get2DLegendColors(1e8), 1e11, "(mg/㎥)")
 
   }
 }
@@ -536,7 +555,7 @@ const startChemicalAccidentAcuteHazard = () => {
   if (magoManager.chemicalAccident2dManager) {
     const layer = magoManager.chemicalAccident2dManager.getChemicalAccident2DLayer(1)
     layer.show();
-    setLegendTableForAcuteCriticality("위해도", getAcuteCriticalityLegendColors(), "")
+    setLegendTableForAcuteCriticality("격자별 위험수준", getAcuteCriticalityLegendColors(), "")
   }
 }
 

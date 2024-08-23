@@ -1,4 +1,5 @@
 <template>
+  <div id="legend-margin"></div>
   <div id="line-chart-wrapper">
     <Line
           :data="computedChartData"
@@ -117,6 +118,12 @@ const options = {
   animation: {
     duration: 0
   },
+  layout: {
+    padding: {
+      left: 5,
+      right: 5,
+    }
+  },
   scales: {
     x: {
       ticks: {
@@ -138,7 +145,9 @@ const options = {
     y: {
       ticks: {
         callback: function(value, index, ticks) {
-          return (Math.round(value * scale * 10) / 10) + 'mg';
+          let scaledValue = (Math.round(value * scale * 10) / 10);
+          scaledValue = scaledValue.toExponential(2);
+          return scaledValue + ' mg/㎥';
         },
         font : {
           size: 9,
@@ -346,7 +355,11 @@ export default {
 
 <style scoped>
 #line-chart-wrapper {
+  height: calc(100% - 20px);
   width: 100%;
-  height: 100%;
+}
+#legend-margin {
+  height: 20px;
+  padding: 4px;
 }
 </style>

@@ -123,6 +123,12 @@ const options = {
   animation: {
     duration: 0
   },
+  layout: {
+    padding: {
+      left: 5,
+      right: 5,
+    }
+  },
   scales: {
     x: {
       ticks: {
@@ -146,7 +152,8 @@ const options = {
     y: {
       ticks: {
         callback: function(value, index, ticks) {
-          return value;
+          let scaledValue = value.toExponential(2);
+          return scaledValue;
         },
         font : {
           size: 9,
