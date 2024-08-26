@@ -47,4 +47,13 @@ export const store = reactive({
     toggleLoading() {
         this.isShowLoading = !this.isShowLoading;
     },
+    toStandardExponential(num: number, digits: number) {
+        const exponential = num.toExponential(digits);
+        const [coefficient, exponent] = exponential.split('e');
+
+        const isNegative = exponent[0] === '-';
+        const absExponent = exponent.slice(1);
+        const paddedExponent = absExponent.padStart(2, '0');
+        return `${coefficient}E${isNegative ? '-' : '+'}${paddedExponent}`;
+    }
 })

@@ -146,7 +146,8 @@ const options = {
       ticks: {
         callback: function(value, index, ticks) {
           let scaledValue = (Math.round(value * scale * 10) / 10);
-          scaledValue = scaledValue.toExponential(2);
+          //scaledValue = scaledValue.toExponential(2);
+          scaledValue = store.toStandardExponential(scaledValue, 2);
           return scaledValue + ' mg/㎥';
         },
         font : {
@@ -169,7 +170,8 @@ const options = {
           // microgram
           //let text = `${label} : ${value}㎍/㎥`;
           // milligram
-          let text = `${label} : ${parseFloat(value).toExponential(2)} mg/㎥`;
+          //let text = `${label} : ${parseFloat(value).toExponential(2)} mg/㎥`;
+          let text = `${label} : ${store.toStandardExponential(value, 2)} mg/㎥`;
           return text;
         }
       }

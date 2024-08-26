@@ -152,7 +152,8 @@ const options = {
     y: {
       ticks: {
         callback: function(value, index, ticks) {
-          let scaledValue = value.toExponential(2);
+          //let scaledValue = value.toExponential(2);
+          let scaledValue = store.toStandardExponential(parseFloat(value), 2);
           return scaledValue + " mg/kg/day";
         },
         font : {
@@ -169,10 +170,11 @@ const options = {
     tooltip: {
       callbacks: {
         label: function(context) {
-          console.log(context);
+          //console.log(context);
           let label = context.dataset.label || '';
           let value = context.dataset.data[context.label];
-          let text = `${label} : ${value} mg/kg/day`;
+          let scaledValue = store.toStandardExponential(value, 2);
+          let text = `${label} : ${scaledValue} mg/kg/day`;
           return text;
         }
       }

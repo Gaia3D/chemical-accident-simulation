@@ -79,8 +79,11 @@ const getDamageType = (grade : string) => {
 const getDamageValue = (value : string) => {
   if (value === '-') {
     return '';
+  } else if (value === '' || value === '0') {
+    return '(0)';
   }
   const valueNum = parseFloat(value).toExponential(2);
+  //const valueNum = store.toStandardExponential(parseFloat(value), 2);
   return `(${valueNum})`;
 }
 
@@ -129,12 +132,12 @@ const drawTrackEntity = async (list : any[]) => {
     },
     {
       id: store.getChemicalAccidentInfo().personRiskInfo.personalId,
-      availability: "2024-02-06T02:00:00Z/2024-02-08T02:00:00Z",
+      //availability: "2024-02-06T02:00:00Z/2024-02-08T02:00:00Z",
       path: {
         material: {
           polylineDash: {
             color: {
-              rgba: [128, 128, 128, 255],
+              rgba: [128, 128, 128, 200],
             },
           },
           width: 2,
