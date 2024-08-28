@@ -187,12 +187,12 @@ defineExpose({
     <button @click="toggleVWorldSatelliteLayer" title="VWorld Satellite Layer">
       <img src="../assets/images/maps/vworld-satellite.png" alt="VWorld Satellite Layer">
     </button>
-    <button @click="toggleBingLayer" title="Bing Maps Layer">
+<!--    <button @click="toggleBingLayer" title="Bing Maps Layer">
       <img src="../assets/images/maps/bing.png" alt="Bing Maps Layer">
     </button>
     <button @click="toggleBingSatelliteLayer" title="Bing Satellite Layer">
       <img src="../assets/images/maps/bing-satellite.png" alt="Bing Satellite Layer">
-    </button>
+    </button>-->
   </div>
 </template>
 

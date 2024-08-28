@@ -43,9 +43,36 @@ const resetDirection = () => {
 
 const flyTo = (lon: number, lat: number, height: number, duration: number = 1) => {
   const viewer = getViewer()
+
+  const ground = Cesium.Cartesian3.fromDegrees(lon, lat, 0)
+  const target = Cesium.Cartesian3.fromDegrees(lon, lat - 0.2, height)
+
+  const startCartographic = Cesium.Cartographic.fromCartesian(ground);
+  //const startDestination = Cesium.Cartesian3.fromRadians(startCartographic.longitude, startCartographic.latitude, startCartographic.height);
+
+  const startDirection = Cesium.Cartesian3.subtract(ground, target, new Cesium.Cartesian3());
+  const startDirectionNormal = Cesium.Cartesian3.normalize(startDirection, new Cesium.Cartesian3());
+
+  const startUpCartesian= Cesium.Cartesian3.fromRadians(startCartographic.longitude, startCartographic.latitude, startCartographic.height + 50.0)
+  const startUpNormal = Cesium.Cartesian3.subtract(target, startUpCartesian, new Cesium.Cartesian3());
+
+  /*viewer.camera.setView({
+    destination : target,
+    orientation : {
+      direction : startDirectionNormal,
+      up : startUpNormal
+    }
+  });*/
+
+
+
   viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
-    duration: duration
+    destination: target,
+    orientation: {
+      direction : startDirectionNormal,
+      up : startUpNormal
+    },
+    duration: duration,
   });
 }
 

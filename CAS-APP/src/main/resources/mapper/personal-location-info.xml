@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gaia3d.casapp.repository.PersonalLocationRepository">
+
+    <select id="getByAccidentNoAndPersonalId" resultType="PersonalLocationInfo">
+        select
+            pli.*,
+            STR_TO_DATE(pli.time, '%Y%m%d%H%i') as date_time
+        from personal_loc_info pli
+        where pli.accident_no = #{accidentCode}
+        and pli.personal_id = #{personalId}
+        order by date_time
+        /*order by pli.time;*/
+    </select>
+
+</mapper>

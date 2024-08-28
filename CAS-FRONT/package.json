@@ -3,15 +3,19 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {누출사고
-    "dev": "vite",농도
-    "build": "vue-tsc -b && vite build",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vue-tsc -b && vite build --mode dev",
     "docker-push": "docker login -u gaia3d -p !gaia3dgaia#d! && docker push gaia3d/oms-vue-front",
     "preview": "vite preview"
   },
   "dependencies": {
+    "chart.js": "^4.4.3",
+    "chartjs-plugin-annotation": "^3.0.1",
+    "vite-plugin-top-level-await": "^1.4.2",
     "vite-tsconfig-paths": "^4.3.2",
     "vue": "^3.4.29",
+    "vue-chartjs": "^5.3.1",
     "vue-plugin-load-script": "^2.1.1",
     "vue-router": "^4.4.0"
   },
