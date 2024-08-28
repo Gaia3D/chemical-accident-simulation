@@ -60,21 +60,21 @@ const startItinerary = () => {
     walkingManMosaicTexPath: walkingManMosaicTexPath,
     walkingManMosaicColumnsCount: 1,
     walkingManMosaicRowsCount: 1,
-    renderThickLine : false,
-    samplePointsSize : 0.0
+    renderThickLine: false,
+    samplePointsSize: 0.0
   };
 
   magoManager.itineraryManager = new Mago3D.ItineraryManager(options);
   const itineraryManager = magoManager.itineraryManager;
 
   let timeOptions = {
-    timeScale : 100,
-    year : 2024,
-    month : 2,
-    day : 6,
-    hour : 11,
-    minute : 0,
-    second : 0
+    timeScale: 100,
+    year: 2024,
+    month: 2,
+    day: 6,
+    hour: 11,
+    minute: 0,
+    second: 0
   };
   if (magoManager.animationTimeController === undefined) {
     magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
@@ -83,7 +83,7 @@ const startItinerary = () => {
   let thickness = 2.0;
 
   for (let loop = 0; loop < 1; loop++) {
-    let padded = paddingZero(loop+1);
+    let padded = paddingZero(loop + 1);
     let filePath = itineraryPath + "USER" + padded + ".json";
     let imagePath = "/data/navigations/navigation.png";
     let layerOptions = {
@@ -92,7 +92,7 @@ const startItinerary = () => {
       thickLineColor: {
         r: 0.5, g: 0.5, b: 0.5, a: 0.5
       },
-      animatedIconFilePath : imagePath,
+      animatedIconFilePath: imagePath,
     };
     itineraryManager.newItineraryLayer(layerOptions);
   }
@@ -111,21 +111,21 @@ const startSimulation = () => {
 
   if (!magoManager.chemicalAccidentManager) {
     let options = {
-      magoManager : magoManager,
-      geoJsonIndexFileFolderPath : path
+      magoManager: magoManager,
+      geoJsonIndexFileFolderPath: path
     };
     magoManager.chemicalAccidentManager = new Mago3D.ChemicalAccidentManager(options);
     magoManager.chemicalAccidentManager.load_chemicalAccidentIndexFile(jsonPath);
     magoManager.chemicalAccidentManager._animationState = Mago3D.CODE.processState.STARTED;
 
     let timeOptions = {
-      timeScale : 100,
-      year : 2024,
-      month : 2,
-      day : 6,
-      hour : 11,
-      minute : 0,
-      second : 0
+      timeScale: 100,
+      year: 2024,
+      month: 2,
+      day: 6,
+      hour: 11,
+      minute: 0,
+      second: 0
     };
     if (magoManager.animationTimeController === undefined) {
       magoManager.animationTimeController = new Mago3D.AnimationTimeController(timeOptions);
@@ -227,6 +227,7 @@ div#simulation-layer {
   display: inline-block;
   padding-bottom: 12px;
 }
+
 div#simulation-layer h3 {
   font-size: 1.0em;
   margin: 8px 5px;
@@ -237,6 +238,7 @@ div#simulation-layer h3 {
   display: inline-block;
   width: 185px;
 }
+
 .switch-wrapper > h4 {
   min-width: 135px;
   display: inline-block;
@@ -251,6 +253,7 @@ div#legend-layer {
   width: 100px;
   display: inline-block;
 }
+
 div#legend-layer h3 {
   font-size: 1.0em;
   margin: 5px;
